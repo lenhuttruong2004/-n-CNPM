@@ -14,7 +14,7 @@
 
     <div class="form-group">
         <label>Tên Loại SP:</label>
-        <InputText @bind-Value="lspDuocChon.Ten_LSP" class="form-control" />
+        <InputText @bind-Value="lspDuocChon.Ten_LSP" class="form-control" MaxLength="50" />
         <ValidationMessage For="@(() => lspDuocChon.Ten_LSP)" />
     </div>
 

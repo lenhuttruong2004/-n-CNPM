@@ -11,15 +11,15 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
 /* Thêm "người thợ" (Service) của bạn vào */
-builder.Services.AddSingleton<DonViTinhService>();
-builder.Services.AddSingleton<LoaiSanPhamService>();
-builder.Services.AddSingleton<SanPhamService>();
-builder.Services.AddSingleton<NhaCungCapService>();
-builder.Services.AddSingleton<KhoService>();
-builder.Services.AddSingleton<KhoUserService>();
-builder.Services.AddSingleton<NhapKhoService>();
-builder.Services.AddSingleton<XuatKhoService>();
-builder.Services.AddSingleton<ReportService>();
+builder.Services.AddScoped<DonViTinhService>();
+builder.Services.AddScoped<LoaiSanPhamService>();
+builder.Services.AddScoped<SanPhamService>();
+builder.Services.AddScoped<NhaCungCapService>();
+builder.Services.AddScoped<KhoService>();
+builder.Services.AddScoped<KhoUserService>();
+builder.Services.AddScoped<NhapKhoService>();
+builder.Services.AddScoped<XuatKhoService>();
+builder.Services.AddScoped<ReportService>();
 
 
 var app = builder.Build();

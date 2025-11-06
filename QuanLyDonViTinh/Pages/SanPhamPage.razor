@@ -16,7 +16,7 @@
 
     <div class="form-group">
         <label>Tên Sản Phẩm:</label>
-        <InputText @bind-Value="spDuocChon.Ten_San_Pham" class="form-control" />
+        <InputText @bind-Value="spDuocChon.Ten_San_Pham" class="form-control" MaxLength="100" />
         <ValidationMessage For="@(() => spDuocChon.Ten_San_Pham)" />
     </div>
 
@@ -118,16 +118,13 @@ else
     private SanPham spDuocChon = new SanPham();
     private string errorMessage;
 
-    // Dữ liệu cho Dropdown Lists (Khóa ngoại)
+    // KHAI BÁO MỘT LẦN DUY NHẤT TẠI ĐÂY
     private IEnumerable<LoaiSanPham> loaiSanPhams;
     private IEnumerable<DonViTinh> donViTinhs;
 
-
     protected override async Task OnInitializedAsync()
     {
-        // Tải dữ liệu Khóa ngoại trước
         await LoadKhoaNgoaiData();
-        // Sau đó tải dữ liệu Sản phẩm chính
         await LoadDanhSach();
     }
 
@@ -146,7 +143,6 @@ else
 
     private void ChonDeSua(SanPham sp)
     {
-        // Tạo bản copy để sửa
         spDuocChon = new SanPham
             {
                 Ma_San_Pham = sp.Ma_San_Pham,
@@ -168,16 +164,20 @@ else
     {
         try
         {
-            if (spDuocChon.Ma_San_Pham == 0) // THÊM MỚI
+            // Nếu ID = 0 thì là Thêm mới, ngược lại là Cập nhật
+            if (spDuocChon.Ma_San_Pham == 0)
             {
                 await SPService.AddSanPham(spDuocChon);
             }
-            else // CẬP NHẬT (SỬA)
+            else
             {
                 await SPService.UpdateSanPham(spDuocChon);
             }
 
-            await LoadDanhSach();
+            // Tải lại dữ liệu sau khi lưu thành công
+            await LoadDanhSach(); // Hoặc await LoadDanhSach(); tùy tên hàm bạn đặt
+
+            // Reset form về trạng thái ban đầu
             HuyBoSua();
         }
         catch (Exception ex)
