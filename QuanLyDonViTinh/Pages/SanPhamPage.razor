@@ -1,0 +1,211 @@
+﻿@page "/sanpham"
+
+@using QuanLyDonViTinh.Models
+@using QuanLyDonViTinh.Services
+@inject SanPhamService SPService
+@inject LoaiSanPhamService LSPService
+@inject DonViTinhService DVTService
+@inject IJSRuntime JSRuntime
+
+<h3>Danh mục Sản Phẩm</h3>
+
+<EditForm Model="@spDuocChon" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <InputNumber @bind-Value="spDuocChon.Ma_San_Pham" hidden />
+
+    <div class="form-group">
+        <label>Tên Sản Phẩm:</label>
+        <InputText @bind-Value="spDuocChon.Ten_San_Pham" class="form-control" />
+        <ValidationMessage For="@(() => spDuocChon.Ten_San_Pham)" />
+    </div>
+
+    <div class="form-group">
+        <label>Loại Sản Phẩm:</label>
+        <InputSelect @bind-Value="spDuocChon.Loai_San_Pham_ID" class="form-control">
+            <option value="0">-- Chọn Loại Sản Phẩm --</option>
+            @if (loaiSanPhams != null)
+            {
+                @foreach (var lsp in loaiSanPhams)
+                {
+                    <option value="@lsp.Ma_LSP">@lsp.Ten_LSP</option>
+                }
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => spDuocChon.Loai_San_Pham_ID)" />
+    </div>
+
+    <div class="form-group">
+        <label>Đơn Vị Tính:</label>
+        <InputSelect @bind-Value="spDuocChon.Don_Vi_Tinh_ID" class="form-control">
+            <option value="0">-- Chọn Đơn Vị Tính --</option>
+            @if (donViTinhs != null)
+            {
+                @foreach (var dvt in donViTinhs)
+                {
+                    <option value="@dvt.Ma_Don_Vi_Tinh">@dvt.Ten_Don_Vi_Tinh</option>
+                }
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => spDuocChon.Don_Vi_Tinh_ID)" />
+    </div>
+
+    <div class="form-group">
+        <label>Ghi chú:</label>
+        <InputText @bind-Value="spDuocChon.Ghi_Chu" class="form-control" />
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" style="color: red;">@errorMessage</div>
+    }
+
+    <button type="submit" class="btn btn-primary">
+        @(spDuocChon.Ma_San_Pham == 0 ? "Thêm mới" : "Lưu thay đổi")
+    </button>
+
+    @if (spDuocChon.Ma_San_Pham != 0)
+    {
+        <button type="button" class="btn btn-secondary" @onclick="HuyBoSua">Hủy bỏ</button>
+    }
+</EditForm>
+
+<hr />
+
+<h4>Danh sách hiện có</h4>
+@if (danhSachSP == null)
+{
+    <p><em>Đang tải dữ liệu...</em></p>
+}
+else
+{
+    <table class="table" border="1" style="border-collapse: collapse; width: 80%;">
+        <thead>
+            <tr>
+                <th>Mã SP</th>
+                <th>Tên Sản Phẩm</th>
+                <th>Loại SP</th>
+                <th>ĐVT</th>
+                <th>Ghi Chú</th>
+                <th>Chức năng</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var sp in danhSachSP)
+            {
+                <tr>
+                    <td>@sp.Ma_San_Pham</td>
+                    <td>@sp.Ten_San_Pham</td>
+                    <td>@sp.Ten_Loai_San_Pham</td>
+                    <td>@sp.Ten_Don_Vi_Tinh</td>
+                    <td>@sp.Ghi_Chu</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" @onclick="() => ChonDeSua(sp)">
+                            Sửa
+                        </button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => XoaSanPham(sp)">
+                            Xóa
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<SanPham> danhSachSP;
+    private SanPham spDuocChon = new SanPham();
+    private string errorMessage;
+
+    // Dữ liệu cho Dropdown Lists (Khóa ngoại)
+    private IEnumerable<LoaiSanPham> loaiSanPhams;
+    private IEnumerable<DonViTinh> donViTinhs;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Tải dữ liệu Khóa ngoại trước
+        await LoadKhoaNgoaiData();
+        // Sau đó tải dữ liệu Sản phẩm chính
+        await LoadDanhSach();
+    }
+
+    private async Task LoadKhoaNgoaiData()
+    {
+        loaiSanPhams = await LSPService.GetDanhSach();
+        donViTinhs = await DVTService.GetDanhSach();
+        errorMessage = null;
+    }
+
+    private async Task LoadDanhSach()
+    {
+        danhSachSP = await SPService.GetDanhSach();
+        errorMessage = null;
+    }
+
+    private void ChonDeSua(SanPham sp)
+    {
+        // Tạo bản copy để sửa
+        spDuocChon = new SanPham
+            {
+                Ma_San_Pham = sp.Ma_San_Pham,
+                Ten_San_Pham = sp.Ten_San_Pham,
+                Loai_San_Pham_ID = sp.Loai_San_Pham_ID,
+                Don_Vi_Tinh_ID = sp.Don_Vi_Tinh_ID,
+                Ghi_Chu = sp.Ghi_Chu
+            };
+        errorMessage = null;
+    }
+
+    private void HuyBoSua()
+    {
+        spDuocChon = new SanPham();
+        errorMessage = null;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            if (spDuocChon.Ma_San_Pham == 0) // THÊM MỚI
+            {
+                await SPService.AddSanPham(spDuocChon);
+            }
+            else // CẬP NHẬT (SỬA)
+            {
+                await SPService.UpdateSanPham(spDuocChon);
+            }
+
+            await LoadDanhSach();
+            HuyBoSua();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task XoaSanPham(SanPham sp)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", new object[] { $"Bạn có chắc muốn xóa sản phẩm '{sp.Ten_San_Pham}' không?" });
+
+        if (confirmed)
+        {
+            try
+            {
+                await SPService.DeleteSanPham(sp.Ma_San_Pham);
+                await LoadDanhSach();
+
+                if (spDuocChon.Ma_San_Pham == sp.Ma_San_Pham)
+                {
+                    HuyBoSua();
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+        }
+    }
+}

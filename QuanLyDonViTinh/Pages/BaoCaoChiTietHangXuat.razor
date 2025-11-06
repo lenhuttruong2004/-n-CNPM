@@ -1,0 +1,100 @@
+﻿@page "/baocao/chitietxuat"
+
+@using QuanLyDonViTinh.Models
+@using QuanLyDonViTinh.Services
+@inject XuatKhoService XKService
+
+<h3>Báo cáo Chi tiết Hàng Xuất</h3>
+
+<div class="card p-3 mb-4">
+    <div class="row">
+        <div class="col-md-4 form-group">
+            <label>Từ Ngày:</label>
+            <InputDate @bind-Value="tuNgay" class="form-control" />
+        </div>
+        <div class="col-md-4 form-group">
+            <label>Đến Ngày:</label>
+            <InputDate @bind-Value="denNgay" class="form-control" />
+        </div>
+        <div class="col-md-4 align-self-end">
+            <button class="btn btn-primary" @onclick="LoadDataReport">Xem Báo cáo</button>
+        </div>
+    </div>
+</div>
+
+@if (reportData == null && isLoading)
+{
+    <p><em>Đang tải dữ liệu...</em></p>
+}
+else if (reportData == null && !isLoading)
+{
+    <p><em>Chưa có dữ liệu. Vui lòng chọn ngày và nhấn "Xem Báo cáo".</em></p>
+}
+else if (!reportData.Any())
+{
+    <p><em>Không tìm thấy dữ liệu cho khoảng ngày đã chọn.</em></p>
+}
+else
+{
+    <table class="table table-striped table-bordered" border="1" style="border-collapse: collapse; width: 100%;">
+        <thead>
+            <tr>
+                <th>Ngày xuất</th>
+                <th>Số phiếu xuất</th>
+                <th>Mã sản phẩm</th>
+                <th>Tên sản phẩm</th>
+                <th class="text-right">SL Xuất</th>
+                <th class="text-right">Đơn giá</th>
+                <th class="text-right">Trị giá</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in reportData)
+            {
+                <tr>
+                    <td>@item.Ngay_Xuat_Kho.ToString("dd/MM/yyyy")</td>
+                    <td>@item.So_Phieu_Xuat_Kho</td>
+                    <td>@item.San_Pham_ID</td>
+                    <td>@item.Ten_San_Pham</td>
+                    <td class="text-right">@item.SL_Xuat.ToString("N0")</td>
+                    <td class="text-right">@item.Don_Gia_Xuat.ToString("N0")</td>
+                    <td class="text-right">@item.Tri_Gia.ToString("N0")</td>
+                </tr>
+            }
+            <tr>
+                <td colspan="6" class="text-right"><b>Tổng cộng:</b></td>
+                <td class="text-right"><b>@reportData.Sum(item => item.Tri_Gia).ToString("N0")</b></td>
+            </tr>
+        </tbody>
+    </table>
+}
+
+@code {
+    // Biến cho bộ lọc ngày
+    private DateTime tuNgay = DateTime.Today.AddDays(-7); // Mặc định 7 ngày trước
+    private DateTime denNgay = DateTime.Today;
+
+    // Biến lưu dữ liệu báo cáo
+    private IEnumerable<BaoCaoChiTietHangXuatViewModel> reportData;
+    private bool isLoading = false; // Biến cờ để hiển thị loading
+
+    // Hàm được gọi khi nhấn nút "Xem Báo cáo"
+    private async Task LoadDataReport()
+    {
+        isLoading = true;
+        reportData = null; // Xóa dữ liệu cũ
+        try
+        {
+            reportData = await XKService.GetBaoCaoChiTietHangXuat(tuNgay, denNgay);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Lỗi tải báo cáo: {ex.Message}");
+            // Có thể thêm biến errorMessage để hiển thị lỗi trên UI
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

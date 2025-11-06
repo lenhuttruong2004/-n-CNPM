@@ -1,0 +1,25 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\TT_Tuan_1\\QuanLyDonViTinh\\QuanLyDonViTinh\\wwwroot\\css\\site.css",
+      "PackagePath": "staticwebassets\\css\\site.css"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.QuanLyDonViTinh.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.build.QuanLyDonViTinh.props",
+      "PackagePath": "build\\QuanLyDonViTinh.props"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.buildMultiTargeting.QuanLyDonViTinh.props",
+      "PackagePath": "buildMultiTargeting\\QuanLyDonViTinh.props"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.buildTransitive.QuanLyDonViTinh.props",
+      "PackagePath": "buildTransitive\\QuanLyDonViTinh.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

@@ -1,0 +1,150 @@
+﻿@page "/donvitinh"
+
+@using QuanLyDonViTinh.Models
+@using QuanLyDonViTinh.Services
+@inject DonViTinhService DVTService
+@inject IJSRuntime JSRuntime
+
+<h3>Danh mục Đơn Vị Tính</h3>
+
+<EditForm Model="@dvtDuocChon" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <InputNumber @bind-Value="dvtDuocChon.Ma_Don_Vi_Tinh" hidden />
+
+    <div class="form-group">
+        <label>Tên ĐVT:</label>
+        <InputText @bind-Value="dvtDuocChon.Ten_Don_Vi_Tinh" class="form-control" MaxLength="50" />
+        <ValidationMessage For="@(() => dvtDuocChon.Ten_Don_Vi_Tinh)" />
+    </div>
+
+    <div class="form-group">
+        <label>Ghi chú:</label>
+        <InputText @bind-Value="dvtDuocChon.Ghi_Chu" class="form-control" />
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-2" style="color: red;">@errorMessage</div>
+    }
+
+    <button type="submit" class="btn btn-primary">
+        @(dvtDuocChon.Ma_Don_Vi_Tinh == 0 ? "Thêm mới" : "Lưu thay đổi")
+    </button>
+
+    @if (dvtDuocChon.Ma_Don_Vi_Tinh != 0)
+    {
+        <button type="button" class="btn btn-secondary" @onclick="HuyBoSua">Hủy bỏ</button>
+    }
+</EditForm>
+
+<hr />
+
+<h4>Danh sách hiện có</h4>
+@if (danhSachDVT == null)
+{
+     <p><em>Đang tải...</em></p>
+}
+else
+{
+    <table class="table" border="1" style="border-collapse: collapse; width: 60%;">
+        <thead>
+            <tr>
+                <th>Mã</th>
+                <th>Tên Đơn Vị Tính</th>
+                <th>Ghi Chú</th>
+                <th>Chức năng</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var dvt in danhSachDVT)
+            {
+                <tr>
+                    <td>@dvt.Ma_Don_Vi_Tinh</td>
+                    <td>@dvt.Ten_Don_Vi_Tinh</td>
+                    <td>@dvt.Ghi_Chu</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" @onclick="() => ChonDeSua(dvt)">Sửa</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => XoaDonViTinh(dvt)">Xóa</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<DonViTinh> danhSachDVT;
+    private DonViTinh dvtDuocChon = new DonViTinh();
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDanhSach();
+    }
+
+    private async Task LoadDanhSach()
+    {
+        danhSachDVT = await DVTService.GetDanhSach();
+        errorMessage = null;
+    }
+
+    private void ChonDeSua(DonViTinh dvt)
+    {
+        dvtDuocChon = new DonViTinh
+            {
+                Ma_Don_Vi_Tinh = dvt.Ma_Don_Vi_Tinh,
+                Ten_Don_Vi_Tinh = dvt.Ten_Don_Vi_Tinh,
+                Ghi_Chu = dvt.Ghi_Chu
+            };
+        errorMessage = null;
+    }
+
+    private void HuyBoSua()
+    {
+        dvtDuocChon = new DonViTinh();
+        errorMessage = null;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            errorMessage = null;
+            if (dvtDuocChon.Ma_Don_Vi_Tinh == 0)
+            {
+                await DVTService.AddDonViTinh(dvtDuocChon);
+            }
+            else
+            {
+                await DVTService.UpdateDonViTinh(dvtDuocChon);
+            }
+            await LoadDanhSach();
+            HuyBoSua();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    /* HÀM XÓA (ĐÃ CẬP NHẬT TRY...CATCH) */
+    private async Task XoaDonViTinh(DonViTinh dvt)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Bạn có chắc muốn xóa '{dvt.Ten_Don_Vi_Tinh}' không?");
+
+        if (confirmed)
+        {
+            try
+            {
+                errorMessage = null;
+                await DVTService.DeleteDonViTinh(dvt.Ma_Don_Vi_Tinh);
+                await LoadDanhSach();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+        }
+    }
+}

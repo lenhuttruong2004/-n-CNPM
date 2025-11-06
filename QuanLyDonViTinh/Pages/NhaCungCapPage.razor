@@ -1,0 +1,158 @@
+﻿@page "/nhacungcap"
+
+@using QuanLyDonViTinh.Models
+@using QuanLyDonViTinh.Services
+@inject NhaCungCapService NCCService
+@inject IJSRuntime JSRuntime
+
+<h3>Danh mục Nhà Cung Cấp</h3>
+
+<EditForm Model="@nccDuocChon" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <InputNumber @bind-Value="nccDuocChon.Ma_NCC" hidden />
+
+    <div class="form-group">
+        <label>Tên Nhà Cung Cấp:</label>
+        <InputText @bind-Value="nccDuocChon.Ten_NCC" class="form-control" />
+        <ValidationMessage For="@(() => nccDuocChon.Ten_NCC)" />
+    </div>
+
+    <div class="form-group">
+        <label>Ghi chú:</label>
+        <InputText @bind-Value="nccDuocChon.Ghi_Chu" class="form-control" />
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" style="color: red;">@errorMessage</div>
+    }
+
+    <button type="submit" class="btn btn-primary">
+        @(nccDuocChon.Ma_NCC == 0 ? "Thêm mới" : "Lưu thay đổi")
+    </button>
+
+    @if (nccDuocChon.Ma_NCC != 0)
+    {
+        <button type="button" class="btn btn-secondary" @onclick="HuyBoSua">Hủy bỏ</button>
+    }
+</EditForm>
+
+<hr />
+
+<h4>Danh sách hiện có</h4>
+@if (danhSachNCC == null)
+{
+    <p><em>Đang tải dữ liệu...</em></p>
+}
+else
+{
+    <table class="table" border="1" style="border-collapse: collapse; width: 60%;">
+        <thead>
+            <tr>
+                <th>Mã NCC</th>
+                <th>Tên NCC</th>
+                <th>Ghi Chú</th>
+                <th>Chức năng</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ncc in danhSachNCC)
+            {
+                <tr>
+                    <td>@ncc.Ma_NCC</td>
+                    <td>@ncc.Ten_NCC</td>
+                    <td>@ncc.Ghi_Chu</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" @onclick="() => ChonDeSua(ncc)">
+                            Sửa
+                        </button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => XoaNhaCungCap(ncc)">
+                            Xóa
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<NhaCungCap> danhSachNCC;
+    private NhaCungCap nccDuocChon = new NhaCungCap();
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDanhSach();
+    }
+
+    private async Task LoadDanhSach()
+    {
+        danhSachNCC = await NCCService.GetDanhSach();
+        errorMessage = null;
+    }
+
+    private void ChonDeSua(NhaCungCap ncc)
+    {
+        // Tạo bản copy để sửa
+        nccDuocChon = new NhaCungCap
+            {
+                Ma_NCC = ncc.Ma_NCC,
+                Ten_NCC = ncc.Ten_NCC,
+                Ghi_Chu = ncc.Ghi_Chu
+            };
+        errorMessage = null;
+    }
+
+    private void HuyBoSua()
+    {
+        nccDuocChon = new NhaCungCap();
+        errorMessage = null;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            if (nccDuocChon.Ma_NCC == 0) // THÊM MỚI
+            {
+                await NCCService.AddNhaCungCap(nccDuocChon);
+            }
+            else // CẬP NHẬT (SỬA)
+            {
+                await NCCService.UpdateNhaCungCap(nccDuocChon);
+            }
+
+            await LoadDanhSach();
+            HuyBoSua();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task XoaNhaCungCap(NhaCungCap ncc)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", new object[] { $"Bạn có chắc muốn xóa nhà cung cấp '{ncc.Ten_NCC}' không?" });
+
+        if (confirmed)
+        {
+            try
+            {
+                await NCCService.DeleteNhaCungCap(ncc.Ma_NCC);
+                await LoadDanhSach();
+
+                if (nccDuocChon.Ma_NCC == ncc.Ma_NCC)
+                {
+                    HuyBoSua();
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+        }
+    }
+}

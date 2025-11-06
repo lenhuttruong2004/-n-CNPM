@@ -1,0 +1,93 @@
+is_global = true
+build_property.TargetFramework = net7.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = QuanLyDonViTinh
+build_property.RootNamespace = QuanLyDonViTinh
+build_property.ProjectDir = C:\TT_Tuan_1\QuanLyDonViTinh\QuanLyDonViTinh\
+build_property.RazorLangVersion = 7.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\TT_Tuan_1\QuanLyDonViTinh\QuanLyDonViTinh
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TWFpbkxheW91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/BaoCaoChiTietHangNhap.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQmFvQ2FvQ2hpVGlldEhhbmdOaGFwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/BaoCaoChiTietHangXuat.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQmFvQ2FvQ2hpVGlldEhhbmdYdWF0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/BaoCaoXuatNhapTon.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQmFvQ2FvWHVhdE5oYXBUb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/BlankLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQmxhbmtMYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/DonViTinhPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRG9uVmlUaW5oUGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/InPhieuNhapPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5QaGlldU5oYXBQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/InPhieuXuatPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5QaGlldVh1YXRQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/KhoPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcS2hvUGFnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/KhoUserPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcS2hvVXNlclBhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/LoaiSanPhamPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9haVNhblBoYW1QYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/NhaCungCapPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTmhhQ3VuZ0NhcFBhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/NhapKhoPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTmhhcEtob1BhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/SanPhamPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2FuUGhhbVBhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/XuatKhoPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcWHVhdEtob1BhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/TT_Tuan_1/QuanLyDonViTinh/QuanLyDonViTinh/Pages/_Host.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0hvc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 

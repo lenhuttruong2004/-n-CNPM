@@ -1,0 +1,134 @@
+﻿@page "/inphieuxuat/{MaXK:int}"
+@layout BlankLayout
+
+@using QuanLyDonViTinh.Models
+@using QuanLyDonViTinh.Services
+@inject XuatKhoService XKService
+@inject KhoService KhoService
+@inject SanPhamService SPService
+@inject DonViTinhService DVTService
+
+@code {
+    [Parameter]
+    public int MaXK { get; set; } // Lấy từ URL
+
+    private PhieuXuatViewModel ViewModel { get; set; }
+    private List<SanPham> sanPhamList; // Để tra cứu ĐVT
+    private List<DonViTinh> dvtList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (MaXK > 0)
+        {
+            // Tải dữ liệu chính
+            ViewModel = await XKService.GetPhieuXuatView(MaXK);
+
+            if (ViewModel != null)
+            {
+                // Tải dữ liệu phụ
+                sanPhamList = (await SPService.GetDanhSach()).ToList();
+                dvtList = (await DVTService.GetDanhSach()).ToList();
+                var khoList = (await KhoService.GetDanhSach()).ToList();
+
+                // Gán tên Kho
+                ViewModel.Header.Ten_Kho = khoList.FirstOrDefault(k => k.Ma_Kho == ViewModel.Header.Kho_ID)?.Ten_Kho;
+            }
+        }
+    }
+}
+
+@if (ViewModel == null)
+{
+    <p><em>Đang tải dữ liệu phiếu xuất ID: @MaXK...</em></p>
+}
+else
+{
+    <div class="container p-4 border" style="font-family: 'Times New Roman', Times, serif; font-size: 11pt; max-width: 800px; background-color: white;">
+
+        <div class="row mb-4">
+            <div class="col-8">
+                <h4 style="margin-bottom: 0;"><b>PHIẾU XUẤT KHO</b></h4>
+                <p style="margin-bottom: 0;">Ngày @ViewModel.Header.Ngay_Xuat_Kho.ToString("dd") tháng @ViewModel.Header.Ngay_Xuat_Kho.ToString("MM") năm @ViewModel.Header.Ngay_Xuat_Kho.ToString("yyyy")</p>
+            </div>
+            <div class="col-4 text-right">
+                <p style="margin-bottom: 0;"><b>Số: @ViewModel.Header.So_Phieu_Xuat_Kho</b></p>
+            </div>
+        </div>
+
+        <div style="border-bottom: 1px solid black; border-top: 1px solid black; padding: 5px 0;">
+            <b>I. Thông tin chung</b>
+        </div>
+        <div class="row mt-2" style="font-size: 10pt;">
+            <div class="col-6">
+                <p><b>1. Lệnh giao hàng:</b> @ViewModel.LenhGiaoHang</p>
+                <p><b>2. Cửa hàng:</b> @ViewModel.CuaHang</p>
+            </div>
+            <div class="col-6">
+                <p><b>3. Kho:</b> @ViewModel.Header.Ten_Kho</p>
+                <p><b>4. Ghi chú:</b> @ViewModel.Header.Ghi_Chu</p>
+            </div>
+        </div>
+
+        <div style="border-bottom: 1px solid black; border-top: 1px solid black; padding: 5px 0; margin-top: 10px;">
+            <b>II. Thông tin hàng</b>
+        </div>
+        <table class="table table-sm table-bordered mt-2" style="font-size: 10pt; color: black;">
+            <thead class="thead-light text-center">
+                <tr>
+                    <th>STT</th>
+                    <th>Mã Hàng</th>
+                    <th>Tên Hàng</th>
+                    <th>PO</th>
+                    <th>Số Chỉ Lệnh</th>
+                    <th>SL</th>
+                    <th>ĐVT</th>
+                    <th>Kiểm Kê</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int stt = 1;
+                }
+                @foreach (var detail in ViewModel.Details)
+                {
+                    // Lấy thông tin ĐVT từ danh sách Sản phẩm và ĐVT
+                    var sanPham = sanPhamList?.FirstOrDefault(sp => sp.Ma_San_Pham == detail.San_Pham_ID);
+                    var dvt = dvtList?.FirstOrDefault(d => d.Ma_Don_Vi_Tinh == sanPham?.Don_Vi_Tinh_ID);
+
+                    <tr>
+                        <td class="text-center">@(stt++)</td>
+                        <td>@(sanPham?.Ma_San_Pham)</td>
+                        <td>@detail.Ten_San_Pham</td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-center">@detail.SL_Xuat.ToString("N0")</td>
+                        <td class="text-center">@dvt?.Ten_Don_Vi_Tinh</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div style="border-bottom: 1px solid black; border-top: 1px solid black; padding: 5px 0; margin-top: 10px;">
+            <b>III. Kết luận</b>
+        </div>
+        <div class="mt-2" style="font-size: 10pt;">
+            <p><b>1. Tổng số lượng thực xuất (viết bằng số):</b> @ViewModel.TongSoLuongVietSo</p>
+            <p><b>2. Tổng số lượng thực xuất (viết bằng chữ):</b> @ViewModel.TongSoLuongVietChu</p>
+            <p><b>3. Mô tả khác biệt:</b></p>
+            <div style="border: 1px solid black; height: 50px; padding: 5px;">
+                @ViewModel.Header.Ghi_Chu
+            </div>
+        </div>
+
+        <div class="row mt-5 text-center" style="font-size: 10pt;">
+            <div class="col-3"><p><b>Người lập phiếu</b><br>(Ký, họ tên)</p></div>
+            <div class="col-3"><p><b>Người nhận hàng</b><br>(Ký, họ tên)</p></div>
+            <div class="col-3"><p><b>Điều phối</b><br>(Ký, họ tên)</p></div>
+            <div class="col-3"><p><b>Giám đốc</b><br>(Ký, họ tên)</p></div>
+        </div>
+
+    </div>
+}

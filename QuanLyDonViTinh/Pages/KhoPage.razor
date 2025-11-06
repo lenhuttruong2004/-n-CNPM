@@ -1,0 +1,159 @@
+﻿@page "/kho"
+
+@using QuanLyDonViTinh.Models
+@using QuanLyDonViTinh.Services
+@inject KhoService KhoService
+@inject IJSRuntime JSRuntime
+
+<h3>Danh mục Kho</h3>
+
+<EditForm Model="@khoDuocChon" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <InputNumber @bind-Value="khoDuocChon.Ma_Kho" hidden />
+
+    <div class="form-group">
+        <label>Tên Kho:</label>
+        <InputText @bind-Value="khoDuocChon.Ten_Kho" class="form-control" />
+        <ValidationMessage For="@(() => khoDuocChon.Ten_Kho)" />
+    </div>
+
+    <div class="form-group">
+        <label>Ghi chú:</label>
+        <InputText @bind-Value="khoDuocChon.Ghi_Chu" class="form-control" />
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-2" style="color: red;">@errorMessage</div>
+    }
+
+    <button type="submit" class="btn btn-primary">
+        @(khoDuocChon.Ma_Kho == 0 ? "Thêm mới" : "Lưu thay đổi")
+    </button>
+
+    @if (khoDuocChon.Ma_Kho != 0)
+    {
+        <button type="button" class="btn btn-secondary" @onclick="HuyBoSua">Hủy bỏ</button>
+    }
+</EditForm>
+
+<hr />
+
+<h4>Danh sách hiện có</h4>
+@if (danhSachKho == null)
+{
+    <p><em>Đang tải dữ liệu...</em></p>
+}
+else
+{
+    <table class="table" border="1" style="border-collapse: collapse; width: 60%;">
+        <thead>
+            <tr>
+                <th>Mã Kho</th>
+                <th>Tên Kho</th>
+                <th>Ghi Chú</th>
+                <th>Chức năng</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var kho in danhSachKho)
+            {
+                <tr>
+                    <td>@kho.Ma_Kho</td>
+                    <td>@kho.Ten_Kho</td>
+                    <td>@kho.Ghi_Chu</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" @onclick="() => ChonDeSua(kho)">
+                            Sửa
+                        </button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => XoaKho(kho)">
+                            Xóa
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<Kho> danhSachKho;
+    private Kho khoDuocChon = new Kho();
+    private string errorMessage; // Biến lưu thông báo lỗi
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDanhSach();
+    }
+
+    private async Task LoadDanhSach()
+    {
+        danhSachKho = await KhoService.GetDanhSach();
+        errorMessage = null; // Xóa lỗi cũ khi tải lại
+    }
+
+    private void ChonDeSua(Kho kho)
+    {
+        // Tạo bản copy để sửa
+        khoDuocChon = new Kho
+            {
+                Ma_Kho = kho.Ma_Kho,
+                Ten_Kho = kho.Ten_Kho,
+                Ghi_Chu = kho.Ghi_Chu
+            };
+        errorMessage = null;
+    }
+
+    private void HuyBoSua()
+    {
+        khoDuocChon = new Kho();
+        errorMessage = null;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            errorMessage = null; // Xóa lỗi cũ
+
+            if (khoDuocChon.Ma_Kho == 0) // THÊM MỚI
+            {
+                await KhoService.AddKho(khoDuocChon);
+            }
+            else // CẬP NHẬT (SỬA)
+            {
+                await KhoService.UpdateKho(khoDuocChon);
+            }
+
+            await LoadDanhSach();
+            HuyBoSua();
+        }
+        catch (Exception ex)
+        {
+            // Bắt lỗi (ví dụ: Tên kho bị trùng)
+            errorMessage = ex.Message;
+        }
+    }
+
+    /* HÀM XÓA (ĐÃ CẬP NHẬT TRY...CATCH) */
+    private async Task XoaKho(Kho kho)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", new object[] { $"Bạn có chắc muốn xóa kho '{kho.Ten_Kho}' không?" });
+
+        if (confirmed)
+        {
+            try
+            {
+                errorMessage = null; // Xóa lỗi cũ
+                await KhoService.DeleteKho(kho.Ma_Kho);
+                await LoadDanhSach();
+            }
+            catch (Exception ex)
+            {
+                // Bắt lỗi (ví dụ: Lỗi Khóa ngoại 547)
+                errorMessage = ex.Message;
+            }
+        }
+    }
+}
