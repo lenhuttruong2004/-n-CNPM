@@ -126,6 +126,7 @@ else
     {
         await LoadKhoaNgoaiData();
         await LoadDanhSach();
+        await LoadAllData();
     }
 
     private async Task LoadKhoaNgoaiData()
@@ -184,6 +185,17 @@ else
         {
             errorMessage = ex.Message;
         }
+    }
+    // Hàm tải tất cả dữ liệu cần thiết
+    private async Task LoadAllData()
+    {
+        // 1. Tải dữ liệu cho 2 Dropdown trước
+        loaiSanPhams = await LSPService.GetDanhSach();
+        donViTinhs = await DVTService.GetDanhSach();
+
+        // 2. Sau đó tải danh sách sản phẩm
+        danhSachSP = await SPService.GetDanhSach();
+        errorMessage = null;
     }
 
     private async Task XoaSanPham(SanPham sp)
