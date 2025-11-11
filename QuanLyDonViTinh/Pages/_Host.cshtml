@@ -26,6 +26,12 @@
             .page {
                 padding: 1cm !important; /* Căn lề cho trang in */
             }
+
+            @@media print {
+                /* Ẩn menu và các nút khi in */
+                .sidebar, .main-header, .btn, .print-controls { /* <-- THÊM .print-controls VÀO ĐÂY */
+                    display: none !important;
+                }
         }
     </style>
 
