@@ -226,14 +226,16 @@ namespace QuanLyDonViTinh.Services
                 return await connection.QueryAsync<BaoCaoChiTietHangNhapViewModel>(sql, new { TuNgay = tuNgay, DenNgay = denNgay });
             }
         }
+        /* HÀM MỚI DÙNG CHO PHIẾU IN (LẤY THÊM TÊN ĐVT) */
         public async Task<List<NhapKhoRawData>> GetChiTietFull(int nhapKhoId)
         {
+            // SỬA LỖI: Đổi 'tbl_NK_Chi_Tiet' thành 'tbl_NK_CT'
             string sql = @"
         SELECT 
             nkct.ID, nkct.Nhap_Kho_ID, nkct.San_Pham_ID, 
-            sp.Ma_SP, sp.Ten_San_Pham, dvt.Ten_Don_Vi_Tinh,  -- Lấy thêm Ten_Don_Vi_Tinh
+            sp.Ma_SP, sp.Ten_San_Pham, dvt.Ten_Don_Vi_Tinh,
             nkct.SL_Nhap, nkct.Don_Gia_Nhap
-        FROM tbl_NK_Chi_Tiet nkct
+        FROM tbl_NK_CT nkct  -- <-- ĐÃ SỬA TẠI ĐÂY
         JOIN tbl_DM_San_Pham sp ON nkct.San_Pham_ID = sp.Ma_San_Pham
         JOIN tbl_DM_Don_Vi_Tinh dvt ON sp.Don_Vi_Tinh_ID = dvt.Ma_Don_Vi_Tinh
         WHERE nkct.Nhap_Kho_ID = @Id;

@@ -1,132 +1,294 @@
 ﻿@page "/inphieunhap/{MaNK:int}"
 @layout BlankLayout
+
+
+@using QuanLyDonViTinh.Models
+
+@using QuanLyDonViTinh.Services
+
 @inject NhapKhoService NKService
+
 @inject KhoService KhoService
+
 @inject NhaCungCapService NCCService
+
 @inject IJSRuntime JSRuntime
 
-@if (phieuIn != null)
-{
-    <div class="container print-container">
-        <h3 class="text-center">PHIẾU NHẬP KHO</h3>
-        <p class="text-center">Ngày @phieuIn.Header.Ngay_Nhap_Kho.Day tháng @phieuIn.Header.Ngay_Nhap_Kho.Month năm @phieuIn.Header.Ngay_Nhap_Kho.Year</p>
-        <p class="text-center">Số: <strong>@phieuIn.Header.So_Phieu_Nhap_Kho</strong></p>
 
-        <hr />
+
+
+
+@if (ViewModel == null)
+
+{
+
+    <p><em>Đang tải dữ liệu phiếu nhập ID: @MaNK...</em></p>
+
+}
+
+else
+
+{
+
+    <div class="container p-4 border" style="font-family: 'Times New Roman', Times, serif; font-size: 11pt; max-width: 800px;">
+
+
 
         <div class="row">
-            <div class="col-8">
-                <p><strong>Đơn vị cung cấp:</strong> @tenNCC</p>
-                <p><strong>Theo hóa đơn số:</strong> ... (nếu có)</p>
-            </div>
-            <div class="col-4">
-                <p><strong>Nhập tại kho:</strong> @tenKho</p>
-                <p><strong>Địa điểm:</strong> ... (nếu có)</p>
-            </div>
-        </div>
-        <p><strong>Ghi chú/Diễn giải:</strong> @phieuIn.Header.Ghi_Chu</p>
 
-        <table class="table table-bordered table-sm mt-3">
+            <div class="col-6">
+
+                <p><b>Đơn Vị: </b>..................................</p>
+
+                <p><b>Bộ Phận: </b>..................................</p>
+
+            </div>
+
+            <div class="col-6 text-right">
+
+                <h4 style="margin-bottom: 0;"><b>PHIẾU NHẬP KHO</b></h4>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="row mt-2">
+
+            <div class="col-6">
+
+                <p>Ngày @ViewModel.Header.Ngay_Nhap_Kho.ToString("dd") tháng @ViewModel.Header.Ngay_Nhap_Kho.ToString("MM") năm @ViewModel.Header.Ngay_Nhap_Kho.ToString("yyyy")</p>
+
+                <p><b>Số Phiếu:</b> @ViewModel.Header.So_Phieu_Nhap_Kho</p>
+
+                <p><b>Họ Tên Người Giao Hàng:</b> @ViewModel.TenNguoiGiaoHang</p>
+
+                <p><b>Theo TK Số:</b> @ViewModel.TheoTKSo</p>
+
+                <p><b>Nhập Tại Kho:</b> @ViewModel.Header.Ten_Kho</p>
+
+            </div>
+
+            <div class="col-6">
+
+                <p><b>Mẫu Số: 01 - VT</b></p>
+
+                <p>Ngày @ViewModel.Header.Ngay_Nhap_Kho.ToString("dd") tháng @ViewModel.Header.Ngay_Nhap_Kho.ToString("MM") năm @ViewModel.Header.Ngay_Nhap_Kho.ToString("yyyy")</p>
+
+                <p><b>Cơ:</b> ...................................</p>
+
+                <p><b>Địa Điểm:</b> ...................................</p>
+
+                <p><b>Địa Chỉ:</b> ...................................</p>
+
+            </div>
+
+        </div>
+
+
+
+        <hr style="border-top: 2px solid black;" />
+
+
+
+        <table class="table table-sm table-bordered" style="font-size: 10pt;">
+
             <thead class="thead-light">
+
                 <tr>
+
                     <th>STT</th>
-                    <th>Tên Sản Phẩm</th>
-                    <th>ĐVT</th>
-                    <th>Số Lượng</th>
+
+                    <th>Tên nhãn hiệu, quy cách, phẩm chất, vật tư, dụng cụ, sản phẩm, hàng hóa</th>
+
+                    <th>Mã Hàng</th>
+
+                    <th>Đơn Vị Tính</th>
+
+                    <th colspan="2">Số Lượng</th>
+
                     <th>Đơn Giá</th>
+
                     <th>Thành Tiền</th>
+
                 </tr>
+
+                <tr>
+
+                    <th>A</th>
+
+                    <th>B</th>
+
+                    <th>C</th>
+
+                    <th>D</th>
+
+                    <th>1</th>
+
+                    <th>2</th>
+
+                    <th>3</th>
+
+                    <th>4</th>
+
+                </tr>
+
             </thead>
+
             <tbody>
-                @if (phieuIn.Details != null)
-                {
-                    int stt = 0;
-                    @foreach (var detail in phieuIn.Details)
-                    {
-                        stt++;
-                        <tr>
-                            <td>@stt</td>
-                            <td>@detail.Ten_San_Pham</td>
-                            <td>@detail.Ten_Don_Vi_Tinh</td>
-                            <td class="text-right">@detail.SL_Nhap.ToString("N0")</td>
-                            <td class="text-right">@detail.Don_Gia_Nhap.ToString("N0")</td>
-                            <td class="text-right">@((detail.SL_Nhap * detail.Don_Gia_Nhap).ToString("N0"))</td>
-                        </tr>
-                    }
+
+                @{
+
+                    int stt = 1;
+
                 }
-                <tr style="font-weight: bold;">
-                    <td colspan="5" class="text-right">TỔNG CỘNG:</td>
-                    <td class="text-right">@tongTien.ToString("N0")</td>
+
+                @foreach (var detail in ViewModel.Details)
+
+                {
+
+                    <tr>
+
+                        <td>@(stt++)</td>
+
+                        <td>@detail.Ten_San_Pham</td>
+
+                        <td>@detail.San_Pham_ID</td>
+
+                        <td>
+                        </td>
+
+                        <td>@detail.SL_Nhap.ToString("N0")</td>
+
+                        <td>@detail.SL_Nhap.ToString("N0")</td>
+
+                        <td>@detail.Don_Gia_Nhap.ToString("N0")</td>
+
+                        <td class="text-right">@((detail.SL_Nhap * detail.Don_Gia_Nhap).ToString("N0"))</td>
+
+                    </tr>
+
+                }
+
+                <tr>
+
+                    <td colspan="4" class="text-center"><b>Tổng</b></td>
+
+                    <td class="text-right"></td>
+
+                    <td class="text-right"></td>
+
+                    <td></td>
+
+                    <td class="text-right"><b>@ViewModel.TongTienSo.ToString("N0")</b></td>
+
                 </tr>
+
             </tbody>
+
         </table>
 
-        <p><strong>Tổng số tiền (viết bằng chữ):</strong> @VNCurrency.ToString(tongTien) đồng.</p>
 
-        <div class="row mt-5 signature-section">
-            <div class="col-4 text-center">
-                <strong>Người lập phiếu</strong><br />
-                <em>(Ký, họ tên)</em>
+
+        <p><b>Tổng Số Tiền (Viết bằng chữ):</b> <i>@ViewModel.TongTienVietChu VND</i></p>
+
+        <p>Hồ sơ, Chứng từ Gốc Kèm Theo: .......................................</p>
+
+
+
+        <div class="row mt-5 text-center" style="font-size: 10pt;">
+
+            <div class="col-3">
+
+                <p><b>Người Lập Phiếu</b></p>
+
+                <p>(Ký, họ tên)</p>
+
             </div>
-            <div class="col-4 text-center">
-                <strong>Người giao hàng</strong><br />
-                <em>(Ký, họ tên)</em>
+
+            <div class="col-3">
+
+                <p><b>Người Giao Hàng</b></p>
+
+                <p>(Ký, họ tên)</p>
+
             </div>
-            <div class="col-4 text-center">
-                <strong>Thủ kho</strong><br />
-                <em>(Ký, họ tên)</em>
+
+            <div class="col-3">
+
+                <p><b>Thủ Kho</b></p>
+
+                <p>(Ký, họ tên)</p>
+
             </div>
+
+            <div class="col-3">
+
+                <p><b>Kế Toán Trưởng</b></p>
+
+                <p>(Ký, họ tên)</p>
+
+            </div>
+
         </div>
+
+
+
     </div>
+
 }
-else
-{
-    <p><em>Đang tải dữ liệu phiếu in...</em></p>
-}
+
+
+
+
 
 @code {
-    [Parameter]
-    public int MaNK { get; set; }
 
-    private NhapKhoFull phieuIn;
-    private string tenKho;
-    private string tenNCC;
-    private decimal tongTien = 0;
+    [Parameter]
+
+    public int MaNK { get; set; } // DÒNG NÀY ĐÃ ĐƯỢC XÓA (XEM BÊN DƯỚI)
+
+
+
+    private PhieuNhapViewModel ViewModel { get; set; }
+
+
 
     protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            var header = await NKService.GetPhieuNhapById(MaNK);
-            var details = await NKService.GetChiTietFull(MaNK); // Cần hàm mới lấy chi tiết đầy đủ
 
-            if (header != null)
+    {
+
+        if (MaNK > 0)
+
+        {
+
+            // Lấy view model từ service
+
+            ViewModel = await NKService.GetPhieuNhapView(MaNK);
+
+
+
+            if (ViewModel != null)
+
             {
-                phieuIn = new NhapKhoFull { Header = header, Details = details };
 
-                // Lấy tên Kho và NCC
-                var kho = await KhoService.GetKhoById(header.Kho_ID);
-                tenKho = kho?.Ten_Kho;
+                // Giả lập lấy tên Kho và NCC cho Header
 
-                var ncc = await NCCService.GetNhaCungCapById(header.NCC_ID);
-                tenNCC = ncc?.Ten_NCC;
+                var tenKho = await KhoService.GetDanhSach();
 
-                // Tính tổng tiền
-                tongTien = phieuIn.Details.Sum(d => d.SL_Nhap * d.Don_Gia_Nhap);
+                var tenNCC = await NCCService.GetDanhSach();
+
+
+
+                ViewModel.Header.Ten_Kho = tenKho.FirstOrDefault(k => k.Ma_Kho == ViewModel.Header.Kho_ID)?.Ten_Kho;
+
+                ViewModel.Header.Ten_NCC = tenNCC.FirstOrDefault(n => n.Ma_NCC == ViewModel.Header.NCC_ID)?.Ten_NCC;
+
             }
+
         }
-        catch (Exception ex)
-        {
-            // Xử lý lỗi
-        }
+
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && phieuIn != null)
-        {
-            // Tự động gọi cửa sổ in sau khi render xong
-            await JSRuntime.InvokeVoidAsync("window.print");
-        }
-    }
 }
