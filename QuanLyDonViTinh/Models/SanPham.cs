@@ -6,11 +6,16 @@ namespace QuanLyDonViTinh.Models
     {
         public int Ma_San_Pham { get; set; }
 
+        // --- BỔ SUNG TRƯỜNG NÀY ---
+        [Required(ErrorMessage = "Mã sản phẩm không được để trống")]
+        [StringLength(50, ErrorMessage = "Mã sản phẩm tối đa 50 ký tự")]
+        public string Ma_SP { get; set; }
+        // -------------------------
+
         [Required(ErrorMessage = "Tên sản phẩm không được để trống")]
-        [StringLength(100, ErrorMessage = "Tên sản phẩm tối đa 100 ký tự")] // Thêm giới hạn độ dài
+        [StringLength(100, ErrorMessage = "Tên sản phẩm tối đa 100 ký tự")]
         public string Ten_San_Pham { get; set; }
 
-        /* Dùng [Range] để bắt buộc chọn giá trị > 0 */
         [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn Loại sản phẩm")]
         public int Loai_San_Pham_ID { get; set; }
 
