@@ -98,5 +98,13 @@ namespace QuanLyDonViTinh.Services
                 }
             }
         }
+        public async Task<Kho> GetKhoById(int id)
+        {
+            string sql = "SELECT * FROM tbl_DM_Kho WHERE Ma_Kho = @Id";
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                return await connection.QuerySingleOrDefaultAsync<Kho>(sql, new { Id = id });
+            }
+        }
     }
 }

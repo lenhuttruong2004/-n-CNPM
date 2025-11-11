@@ -20,5 +20,6 @@ namespace QuanLyDonViTinh.Models
 
         // Thuộc tính hiển thị (không có trong DB)
         public string Ten_San_Pham { get; set; }
+        public string Ten_Don_Vi_Tinh { get; set; }
     }
 }

@@ -69,6 +69,14 @@ namespace QuanLyDonViTinh.Services
                 else { throw; }
             }
         }
+        public async Task<NhaCungCap> GetNhaCungCapById(int id)
+        {
+            string sql = "SELECT * FROM tbl_DM_Nha_Cung_Cap WHERE Ma_NCC = @Id";
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                return await connection.QuerySingleOrDefaultAsync<NhaCungCap>(sql, new { Id = id });
+            }
+        }
 
         /* HÀM XÓA (DELETE) */
         public async Task DeleteNhaCungCap(int id)

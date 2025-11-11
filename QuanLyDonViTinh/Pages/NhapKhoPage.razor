@@ -248,6 +248,7 @@ else
                         <button class="btn btn-sm btn-info" @onclick="() => ChonPhieuDeSua(phieu.Ma_NK, false)">Sửa Header</button>
                         <button class="btn btn-sm btn-warning" @onclick="() => ChonPhieuDeSua(phieu.Ma_NK, true)">Chi tiết</button>
                         <button class="btn btn-sm btn-danger" @onclick="() => DeletePhieuNhap(phieu)">Xóa</button>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="() => InPhieu(phieu.Ma_NK)">In Phiếu</button>
                     </td>
                 </tr>
             }
@@ -411,6 +412,12 @@ else
                 }
             }
         }
+        private async Task InPhieu(int maNK)
+        {
+        // Mở một tab mới trên trình duyệt và điều hướng đến trang in
+        await JSRuntime.InvokeAsync<object>("open", $"/inphieunhap/{maNK}", "_blank");
+        }
+
 
         private void AddDetailTrongCheDoSua()
         {
