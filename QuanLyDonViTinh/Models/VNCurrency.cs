@@ -48,7 +48,6 @@ namespace QuanLyDonViTinh.Models
 
         public static string ToString(decimal soTien)
         {
-            // Làm tròn số tiền về số nguyên
             long soTienNguyen = (long)Math.Round(soTien, 0);
             return ToString(soTienNguyen);
         }
@@ -91,9 +90,7 @@ namespace QuanLyDonViTinh.Models
             if (KetQua.EndsWith(",")) KetQua = KetQua.Substring(0, KetQua.Length - 1);
             KetQua = KetQua.Trim();
 
-            // Chuẩn hóa, viết hoa chữ cái đầu
             string result = KetQua.Substring(0, 1).ToUpper() + KetQua.Substring(1);
-            // Loại bỏ dấu phẩy cuối cùng nếu nó là ký tự cuối
             if (result.EndsWith(","))
                 result = result.Substring(0, result.Length - 1);
 
