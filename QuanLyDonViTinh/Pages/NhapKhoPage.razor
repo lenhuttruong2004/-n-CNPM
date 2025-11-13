@@ -149,7 +149,7 @@ else if (currentPhieu.Header.Id != 0 && isEditingDetails)
                         <tr>
                             <td><span>@detail.Ten_San_Pham</span></td>
                             <td>
-                                @if (detail.ID == detailDangSua?.ID)
+                                @if (detail.Id == detailDangSua?.Id)
                                 {
                                     <InputNumber @bind-Value="detailDangSua.SL_Nhap" class="form-control form-control-sm" />
                                 }
@@ -159,7 +159,7 @@ else if (currentPhieu.Header.Id != 0 && isEditingDetails)
                                 }
                             </td>
                             <td>
-                                @if (detail.ID == detailDangSua?.ID)
+                                @if (detail.Id == detailDangSua?.Id)
                                 {
                                     <InputNumber @bind-Value="detailDangSua.Don_Gia_Nhap" class="form-control form-control-sm" format="N0" />
                                 }
@@ -170,7 +170,7 @@ else if (currentPhieu.Header.Id != 0 && isEditingDetails)
                             </td>
                             <td>@((detail.SL_Nhap * detail.Don_Gia_Nhap).ToString("N0"))</td>
                             <td>
-                                @if (detail.ID == detailDangSua?.ID)
+                                @if (detail.Id == detailDangSua?.Id)
                                 {
                                     <button class="btn btn-sm btn-success" @onclick="LuuSuaChiTiet">Lưu</button>
                                     <button class="btn btn-sm btn-secondary" @onclick="HuySuaChiTiet">Hủy</button>
@@ -342,7 +342,7 @@ else
     {
         detailDangSua = new NhapKhoRawData
             {
-                ID = detail.ID,
+                Id = detail.Id,
                 Nhap_Kho_ID = detail.Nhap_Kho_ID,
                 San_Pham_ID = detail.San_Pham_ID,
                 Ten_San_Pham = detail.Ten_San_Pham,
@@ -363,7 +363,7 @@ else
 
             await NKService.UpdateChiTiet(detailDangSua);
 
-            var index = currentPhieu.Details.FindIndex(d => d.ID == detailDangSua.ID);
+            var index = currentPhieu.Details.FindIndex(d => d.Id == detailDangSua.Id);
             if (index != -1)
             {
                 currentPhieu.Details[index] = detailDangSua;
@@ -392,7 +392,7 @@ else
         {
             try
             {
-                await NKService.DeleteChiTiet(detail.ID);
+                await NKService.DeleteChiTiet(detail.Id);
                 currentPhieu.Details.Remove(detail);
                 await LoadDanhSachPhieu();
             }
