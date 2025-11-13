@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
+using Microsoft.Extensions.Configuration; // Thêm using này
 
 namespace QuanLyDonViTinh.Services
 {
@@ -16,10 +17,28 @@ namespace QuanLyDonViTinh.Services
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
+        // === THÊM HÀM HỖ TRỢ VALIDATE ===
+        private void StandardizeInput(NhaCungCap ncc)
+        {
+            if (ncc == null) return;
+            ncc.Ma_NCC = ncc.Ma_NCC?.Trim().ToUpper();
+            ncc.Ten_NCC = ncc.Ten_NCC?.Trim();
+            ncc.Ghi_Chu = ncc.Ghi_Chu?.Trim();
+
+            // Cắt chuỗi nếu quá dài (phòng vệ)
+            if (ncc.Ma_NCC?.Length > 50)
+                ncc.Ma_NCC = ncc.Ma_NCC.Substring(0, 50);
+            if (ncc.Ten_NCC?.Length > 200)
+                ncc.Ten_NCC = ncc.Ten_NCC.Substring(0, 200);
+            if (ncc.Ghi_Chu?.Length > 500)
+                ncc.Ghi_Chu = ncc.Ghi_Chu.Substring(0, 500);
+        }
+
         /* HÀM LẤY DANH SÁCH (READ) */
         public async Task<IEnumerable<NhaCungCap>> GetDanhSach()
         {
-            string sql = "SELECT * FROM tbl_DM_NCC";
+            // === SỬA === (Nên chỉ định rõ cột)
+            string sql = "SELECT Id, Ma_NCC, Ten_NCC, Ghi_Chu FROM tbl_DM_NCC";
             using (var connection = new SqlConnection(_connectionString))
             {
                 return await connection.QueryAsync<NhaCungCap>(sql);
@@ -29,7 +48,9 @@ namespace QuanLyDonViTinh.Services
         /* HÀM THÊM MỚI (CREATE) */
         public async Task AddNhaCungCap(NhaCungCap nhaCungCap)
         {
-            string sql = "INSERT INTO tbl_DM_NCC (Ten_NCC, Ghi_Chu) VALUES (@Ten_NCC, @Ghi_Chu)";
+            StandardizeInput(nhaCungCap); // Chuẩn hóa dữ liệu
+            // === SỬA === (Thêm "Ma_NCC" vào câu INSERT)
+            string sql = "INSERT INTO tbl_DM_NCC (Ma_NCC, Ten_NCC, Ghi_Chu) VALUES (@Ma_NCC, @Ten_NCC, @Ghi_Chu)";
             try
             {
                 using (var connection = new SqlConnection(_connectionString))
@@ -39,10 +60,10 @@ namespace QuanLyDonViTinh.Services
             }
             catch (SqlException ex)
             {
-                // Xử lý lỗi Ràng buộc DUY NHẤT (UNIQUE)
                 if (ex.Number == 2627 || ex.Number == 2601)
                 {
-                    throw new Exception("Tên nhà cung cấp này đã tồn tại. Vui lòng nhập tên khác.");
+                    // Sửa thông báo lỗi
+                    throw new Exception("Mã hoặc Tên nhà cung cấp này đã tồn tại.");
                 }
                 else { throw; }
             }
@@ -51,7 +72,9 @@ namespace QuanLyDonViTinh.Services
         /* HÀM CẬP NHẬT (UPDATE / SỬA) */
         public async Task UpdateNhaCungCap(NhaCungCap nhaCungCap)
         {
-            string sql = "UPDATE tbl_DM_NCC SET Ten_NCC = @Ten_NCC, Ghi_Chu = @Ghi_Chu WHERE Ma_NCC = @Ma_NCC";
+            StandardizeInput(nhaCungCap); // Chuẩn hóa dữ liệu
+            // === SỬA === (Thêm "Ma_NCC" vào SET và WHERE bằng "Id")
+            string sql = "UPDATE tbl_DM_NCC SET Ma_NCC = @Ma_NCC, Ten_NCC = @Ten_NCC, Ghi_Chu = @Ghi_Chu WHERE Id = @Id";
             try
             {
                 using (var connection = new SqlConnection(_connectionString))
@@ -61,17 +84,18 @@ namespace QuanLyDonViTinh.Services
             }
             catch (SqlException ex)
             {
-                // Xử lý lỗi Ràng buộc DUY NHẤT (UNIQUE)
                 if (ex.Number == 2627 || ex.Number == 2601)
                 {
-                    throw new Exception("Tên nhà cung cấp này đã tồn tại. Vui lòng nhập tên khác.");
+                    throw new Exception("Mã hoặc Tên nhà cung cấp này đã tồn tại.");
                 }
                 else { throw; }
             }
         }
+
         public async Task<NhaCungCap> GetNhaCungCapById(int id)
         {
-            string sql = "SELECT * FROM tbl_DM_Nha_Cung_Cap WHERE Ma_NCC = @Id";
+            // === SỬA === (Sửa tên bảng và WHERE bằng "Id")
+            string sql = "SELECT * FROM tbl_DM_NCC WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString))
             {
                 return await connection.QuerySingleOrDefaultAsync<NhaCungCap>(sql, new { Id = id });
@@ -81,10 +105,23 @@ namespace QuanLyDonViTinh.Services
         /* HÀM XÓA (DELETE) */
         public async Task DeleteNhaCungCap(int id)
         {
-            string sql = "DELETE FROM tbl_DM_NCC WHERE Ma_NCC = @Id";
+            // === SỬA === (WHERE bằng "Id")
+            string sql = "DELETE FROM tbl_DM_NCC WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString))
             {
-                await connection.ExecuteAsync(sql, new { Id = id });
+                // === THÊM (Nên có) === Bắt lỗi khóa ngoại
+                try
+                {
+                    await connection.ExecuteAsync(sql, new { Id = id });
+                }
+                catch (SqlException ex)
+                {
+                    if (ex.Number == 547) // Lỗi ràng buộc khóa ngoại
+                    {
+                        throw new Exception("Không thể xóa nhà cung cấp này vì đang được sử dụng (ví dụ: trong phiếu nhập).");
+                    }
+                    else { throw; }
+                }
             }
         }
     }

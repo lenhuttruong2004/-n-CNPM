@@ -10,17 +10,17 @@
 <EditForm Model="@dvtDuocChon" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
 
-    <InputNumber @bind-Value="dvtDuocChon.Ma_Don_Vi_Tinh" hidden />
+    <InputNumber @bind-Value="dvtDuocChon.Id" hidden />
 
     <div class="form-group">
         <label>Tên ĐVT:</label>
-        <InputText @bind-Value="dvtDuocChon.Ten_Don_Vi_Tinh" class="form-control" MaxLength="50" />
+        <InputText @bind-Value="dvtDuocChon.Ten_Don_Vi_Tinh" class="form-control" MaxLength="100" />
         <ValidationMessage For="@(() => dvtDuocChon.Ten_Don_Vi_Tinh)" />
     </div>
 
     <div class="form-group">
         <label>Ghi chú:</label>
-        <InputText @bind-Value="dvtDuocChon.Ghi_Chu" class="form-control" />
+        <InputText @bind-Value="dvtDuocChon.Ghi_Chu" class="form-control" MaxLength="500" />
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
@@ -29,10 +29,10 @@
     }
 
     <button type="submit" class="btn btn-primary">
-        @(dvtDuocChon.Ma_Don_Vi_Tinh == 0 ? "Thêm mới" : "Lưu thay đổi")
+        @(dvtDuocChon.Id == 0 ? "Thêm mới" : "Lưu thay đổi")
     </button>
 
-    @if (dvtDuocChon.Ma_Don_Vi_Tinh != 0)
+    @if (dvtDuocChon.Id != 0)
     {
         <button type="button" class="btn btn-secondary" @onclick="HuyBoSua">Hủy bỏ</button>
     }
@@ -43,7 +43,7 @@
 <h4>Danh sách hiện có</h4>
 @if (danhSachDVT == null)
 {
-     <p><em>Đang tải...</em></p>
+    <p><em>Đang tải...</em></p>
 }
 else
 {
@@ -60,7 +60,7 @@ else
             @foreach (var dvt in danhSachDVT)
             {
                 <tr>
-                    <td>@dvt.Ma_Don_Vi_Tinh</td>
+                    <td>@dvt.Id</td>
                     <td>@dvt.Ten_Don_Vi_Tinh</td>
                     <td>@dvt.Ghi_Chu</td>
                     <td>
@@ -93,7 +93,8 @@ else
     {
         dvtDuocChon = new DonViTinh
             {
-                Ma_Don_Vi_Tinh = dvt.Ma_Don_Vi_Tinh,
+                // === SỬA === (từ Ma_Don_Vi_Tinh thành Id)
+                Id = dvt.Id,
                 Ten_Don_Vi_Tinh = dvt.Ten_Don_Vi_Tinh,
                 Ghi_Chu = dvt.Ghi_Chu
             };
@@ -111,7 +112,8 @@ else
         try
         {
             errorMessage = null;
-            if (dvtDuocChon.Ma_Don_Vi_Tinh == 0)
+            // === SỬA === (từ Ma_Don_Vi_Tinh thành Id)
+            if (dvtDuocChon.Id == 0)
             {
                 await DVTService.AddDonViTinh(dvtDuocChon);
             }
@@ -138,7 +140,8 @@ else
             try
             {
                 errorMessage = null;
-                await DVTService.DeleteDonViTinh(dvt.Ma_Don_Vi_Tinh);
+                // === SỬA === (từ Ma_Don_Vi_Tinh thành Id)
+                await DVTService.DeleteDonViTinh(dvt.Id);
                 await LoadDanhSach();
             }
             catch (Exception ex)

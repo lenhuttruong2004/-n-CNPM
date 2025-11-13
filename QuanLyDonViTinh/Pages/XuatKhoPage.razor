@@ -11,8 +11,8 @@
 
 @if (!isEditingDetails)
 {
-    <h4>@(currentPhieu.Header.Ma_XK == 0 ? "1. Thêm Phiếu Xuất Mới" : $"1. Hiệu chỉnh Phiếu: {currentPhieu.Header.So_Phieu_Xuat_Kho}")</h4>
-    <div class="card p-3 mb-4 border @(currentPhieu.Header.Ma_XK == 0 ? "border-primary" : "border-info")">
+    <h4>@(currentPhieu.Header.Id == 0 ? "1. Thêm Phiếu Xuất Mới" : $"1. Hiệu chỉnh Phiếu: {currentPhieu.Header.So_Phieu_Xuat_Kho}")</h4>
+    <div class="card p-3 mb-4 border @(currentPhieu.Header.Id == 0 ? "border-primary" : "border-info")">
 
         <EditForm Model="@currentPhieu.Header" OnValidSubmit="HandleValidSubmit">
             <DataAnnotationsValidator />
@@ -29,7 +29,7 @@
                         @if (danhSachKho != null)
                         { @foreach (var kho in danhSachKho)
                             {
-                                <option value="@kho.Ma_Kho">@kho.Ten_Kho</option>
+                                <option value="@kho.Id">@kho.Ten_Kho</option>
                             }
                         }
                     </InputSelect>
@@ -48,7 +48,7 @@
 
             <hr />
 
-            @if (currentPhieu.Header.Ma_XK == 0)
+            @if (currentPhieu.Header.Id == 0)
             {
                 <h5>Chi tiết Sản Phẩm</h5>
                 <div class="table-responsive">
@@ -72,7 +72,7 @@
                                     @if (danhSachSP != null)
                                     { @foreach (var sp in danhSachSP)
                                         {
-                                            <option value="@sp.Ma_San_Pham">@sp.Ten_San_Pham</option>
+                                            <option value="@sp.Id">@sp.Ten_San_Pham</option>
                                         }
                                     }
                                 </InputSelect>
@@ -95,27 +95,27 @@
                 <div class="alert alert-danger" style="color: red;">@pageErrorMessage</div>
             }
 
-            <button type="submit" class="btn @(currentPhieu.Header.Ma_XK == 0 ? "btn-primary" : "btn-success") mt-3">
-                @(currentPhieu.Header.Ma_XK == 0 ? "Lưu Phiếu Xuất" : "Lưu Hiệu Chỉnh")
+            <button type="submit" class="btn @(currentPhieu.Header.Id == 0 ? "btn-primary" : "btn-success") mt-3">
+                @(currentPhieu.Header.Id == 0 ? "Lưu Phiếu Xuất" : "Lưu Hiệu Chỉnh")
             </button>
             <button type="button" class="btn btn-secondary mt-3" @onclick="ResetForm">
-                @(currentPhieu.Header.Ma_XK == 0 ? "Hủy bỏ" : "Hủy Hiệu Chỉnh")
+                @(currentPhieu.Header.Id == 0 ? "Hủy bỏ" : "Hủy Hiệu Chỉnh")
             </button>
 
-            @if (currentPhieu.Header.Ma_XK != 0)
+            @if (currentPhieu.Header.Id != 0)
             {
                 <button type="button" class="btn btn-info mt-3" @onclick="ChuyenSangSuaChiTiet">Chuyển sang sửa Chi tiết</button>
             }
         </EditForm>
     </div>
 }
-else if (currentPhieu.Header.Ma_XK != 0 && isEditingDetails)
+else if (currentPhieu.Header.Id != 0 && isEditingDetails)
 {
     <h4>Quản lý Chi tiết Phiếu: @currentPhieu.Header.So_Phieu_Xuat_Kho</h4>
     <div class="card p-3 mb-4 border border-warning">
 
         <div class="row mb-3">
-            <div class="col-md-6"><b>Kho:</b> @danhSachKho?.FirstOrDefault(k => k.Ma_Kho == currentPhieu.Header.Kho_ID)?.Ten_Kho</div>
+            <div class="col-md-6"><b>Kho:</b> @danhSachKho?.FirstOrDefault(k => k.Id == currentPhieu.Header.Kho_ID)?.Ten_Kho</div>
             <div class="col-md-6"><b>Ngày:</b> @currentPhieu.Header.Ngay_Xuat_Kho.ToString("dd/MM/yyyy")</div>
         </div>
         <hr />
@@ -183,8 +183,8 @@ else if (currentPhieu.Header.Ma_XK != 0 && isEditingDetails)
                                 @if (danhSachSP != null)
                                 { @foreach (var sp in danhSachSP)
                                     {
-                                        <option value="@sp.Ma_San_Pham">@sp.Ten_San_Pham</option>
-                                    }              }
+                                        <option value="@sp.Id">@sp.Ten_San_Pham</option>
+                                    } }
                             </InputSelect>
                             @if (showDetailError)
                             {
@@ -209,14 +209,14 @@ else if (currentPhieu.Header.Ma_XK != 0 && isEditingDetails)
 <h4>2. Danh sách Phiếu Xuất Đã Lưu</h4>
 @if (danhSachPhieu == null)
 {
-     <p><em>Đang tải dữ liệu...</em></p>
+    <p><em>Đang tải dữ liệu...</em></p>
 }
 else
 {
     <table class="table table-hover table-striped" border="1" style="border-collapse: collapse; width: 100%;">
         <thead>
             <tr>
-                <th>Mã XK</th>
+                <th>Mã (ID)</th>
                 <th>Số Phiếu</th>
                 <th>Ngày Xuất</th>
                 <th>Kho</th>
@@ -228,15 +228,15 @@ else
             @foreach (var phieu in danhSachPhieu)
             {
                 <tr>
-                    <td>@phieu.Ma_XK</td>
+                    <td>@phieu.Id</td>
                     <td>@phieu.So_Phieu_Xuat_Kho</td>
                     <td>@phieu.Ngay_Xuat_Kho.ToString("dd/MM/yyyy")</td>
                     <td>@phieu.Ten_Kho</td>
                     <td class="text-right">@phieu.Tong_Tien.ToString("N0")</td>
                     <td>
-                        <button class="btn btn-sm btn-info" @onclick="() => ChonPhieuDeSua(phieu.Ma_XK, false)">Sửa Header</button>
-                        <button class="btn btn-sm btn-warning" @onclick="() => ChonPhieuDeSua(phieu.Ma_XK, true)">Chi tiết</button>
-                        <a href="/inphieuxuat/@phieu.Ma_XK" target="_blank" class="btn btn-sm btn-success">
+                        <button class="btn btn-sm btn-info" @onclick="() => ChonPhieuDeSua(phieu.Id, false)">Sửa Header</button>
+                        <button class="btn btn-sm btn-warning" @onclick="() => ChonPhieuDeSua(phieu.Id, true)">Chi tiết</button>
+                        <a href="/inphieuxuat/@phieu.Id" target="_blank" class="btn btn-sm btn-success">
                             In Phiếu
                         </a>
                         <button class="btn btn-sm btn-danger" @onclick="async () => await DeletePhieuXuat(phieu)">Xóa</button>
@@ -269,6 +269,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // (Giả định các Service này đã được sửa để trả về "Id")
         danhSachKho = await KhoService.GetDanhSach();
         danhSachSP = await SPService.GetDanhSach();
         await LoadDanhSachPhieu();
@@ -285,13 +286,14 @@ else
     /* CHẾ ĐỘ SỬA CHI TIẾT (MỚI) */
     /* ----------------------------------------------------- */
 
-    private async Task ChonPhieuDeSua(int maXK, bool editDetailMode)
+    // === SỬA === (Tham số là id)
+    private async Task ChonPhieuDeSua(int id, bool editDetailMode)
     {
         pageErrorMessage = null;
         try
         {
-            var header = await XKService.GetPhieuXuatById(maXK);
-            var details = await XKService.GetChiTiet(maXK);
+            var header = await XKService.GetPhieuXuatById(id);
+            var details = await XKService.GetChiTiet(id);
 
             if (header != null)
             {
@@ -397,11 +399,13 @@ else
 
         try
         {
-            newDetail.Xuat_Kho_ID = currentPhieu.Header.Ma_XK;
+            // === SỬA === (Gán Header.Id)
+            newDetail.Xuat_Kho_ID = currentPhieu.Header.Id;
 
             await XKService.AddChiTiet(newDetail);
 
-            currentPhieu.Details = await XKService.GetChiTiet(currentPhieu.Header.Ma_XK);
+            // === SỬA === (Lấy chi tiết bằng Header.Id)
+            currentPhieu.Details = await XKService.GetChiTiet(currentPhieu.Header.Id);
 
             newDetail = new XuatKhoRawData { SL_Xuat = 1, Don_Gia_Xuat = 0 };
 
@@ -414,7 +418,7 @@ else
     }
 
     /* ----------------------------------------------------- */
-    /* HÀM CHUNG & THÊM MỚI (Giữ nguyên) */
+    /* HÀM CHUNG & THÊM MỚI */
     /* ----------------------------------------------------- */
 
     private async Task HandleValidSubmit()
@@ -422,7 +426,8 @@ else
         pageErrorMessage = null;
         try
         {
-            if (currentPhieu.Header.Ma_XK == 0) // THÊM MỚI
+            // === SỬA === (Kiểm tra Header.Id)
+            if (currentPhieu.Header.Id == 0) // THÊM MỚI
             {
                 if (currentPhieu.Details == null || !currentPhieu.Details.Any())
                 {
@@ -459,8 +464,10 @@ else
         if (newDetail.Don_Gia_Xuat <= 0) { detailErrorMessage = "Đơn giá phải lớn hơn 0."; showDetailError = true; return; }
         if (currentPhieu.Details.Any(d => d.San_Pham_ID == newDetail.San_Pham_ID)) { detailErrorMessage = "Sản phẩm này đã có trong chi tiết phiếu."; showDetailError = true; return; }
 
-        newDetail.Ten_San_Pham = danhSachSP.FirstOrDefault(sp => sp.Ma_San_Pham == newDetail.San_Pham_ID)?.Ten_San_Pham;
-        newDetail.Xuat_Kho_ID = currentPhieu.Header.Ma_XK;
+        // === SỬA === (Tìm tên bằng sp.Id)
+        newDetail.Ten_San_Pham = danhSachSP.FirstOrDefault(sp => sp.Id == newDetail.San_Pham_ID)?.Ten_San_Pham;
+        // === SỬA === (Gán Header.Id)
+        newDetail.Xuat_Kho_ID = currentPhieu.Header.Id;
 
         currentPhieu.Details.Add(new XuatKhoRawData
             {
@@ -492,7 +499,8 @@ else
         {
             try
             {
-                await XKService.DeletePhieuXuat(phieu.Ma_XK);
+                // === SỬA === (Truyền phieu.Id)
+                await XKService.DeletePhieuXuat(phieu.Id);
                 await LoadDanhSachPhieu();
                 ResetForm();
             }
@@ -507,13 +515,13 @@ else
         if (int.TryParse(e.Value?.ToString(), out int selectedId))
         {
             newDetail.San_Pham_ID = selectedId;
-            newDetail.Ten_San_Pham = danhSachSP.FirstOrDefault(sp => sp.Ma_San_Pham == selectedId)?.Ten_San_Pham;
+            // === SỬA === (Tìm bằng sp.Id)
+            newDetail.Ten_San_Pham = danhSachSP.FirstOrDefault(sp => sp.Id == selectedId)?.Ten_San_Pham;
         }
     }
-    /* HÀM XÓA CHI TIẾT KHỎI LIST (TRONG CHẾ ĐỘ THÊM MỚI) */
+
     private void RemoveDetail(XuatKhoRawData detail)
     {
-        // Logic này chỉ xóa khỏi danh sách trên giao diện (UI list)
         currentPhieu.Details.Remove(detail);
         pageErrorMessage = null;
     }

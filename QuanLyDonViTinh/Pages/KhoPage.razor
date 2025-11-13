@@ -10,17 +10,17 @@
 <EditForm Model="@khoDuocChon" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
 
-    <InputNumber @bind-Value="khoDuocChon.Ma_Kho" hidden />
+    <InputNumber @bind-Value="khoDuocChon.Id" hidden />
 
     <div class="form-group">
         <label>Tên Kho:</label>
-        <InputText @bind-Value="khoDuocChon.Ten_Kho" class="form-control" />
+        <InputText @bind-Value="khoDuocChon.Ten_Kho" class="form-control" MaxLength="200" />
         <ValidationMessage For="@(() => khoDuocChon.Ten_Kho)" />
     </div>
 
     <div class="form-group">
         <label>Ghi chú:</label>
-        <InputText @bind-Value="khoDuocChon.Ghi_Chu" class="form-control" />
+        <InputText @bind-Value="khoDuocChon.Ghi_Chu" class="form-control" MaxLength="500" />
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
@@ -29,10 +29,10 @@
     }
 
     <button type="submit" class="btn btn-primary">
-        @(khoDuocChon.Ma_Kho == 0 ? "Thêm mới" : "Lưu thay đổi")
+        @(khoDuocChon.Id == 0 ? "Thêm mới" : "Lưu thay đổi")
     </button>
 
-    @if (khoDuocChon.Ma_Kho != 0)
+    @if (khoDuocChon.Id != 0)
     {
         <button type="button" class="btn btn-secondary" @onclick="HuyBoSua">Hủy bỏ</button>
     }
@@ -50,7 +50,7 @@ else
     <table class="table" border="1" style="border-collapse: collapse; width: 60%;">
         <thead>
             <tr>
-                <th>Mã Kho</th>
+                <th>Mã (ID)</th>
                 <th>Tên Kho</th>
                 <th>Ghi Chú</th>
                 <th>Chức năng</th>
@@ -60,7 +60,7 @@ else
             @foreach (var kho in danhSachKho)
             {
                 <tr>
-                    <td>@kho.Ma_Kho</td>
+                    <td>@kho.Id</td>
                     <td>@kho.Ten_Kho</td>
                     <td>@kho.Ghi_Chu</td>
                     <td>
@@ -80,7 +80,7 @@ else
 @code {
     private IEnumerable<Kho> danhSachKho;
     private Kho khoDuocChon = new Kho();
-    private string errorMessage; // Biến lưu thông báo lỗi
+    private string errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -90,15 +90,15 @@ else
     private async Task LoadDanhSach()
     {
         danhSachKho = await KhoService.GetDanhSach();
-        errorMessage = null; // Xóa lỗi cũ khi tải lại
+        errorMessage = null;
     }
 
     private void ChonDeSua(Kho kho)
     {
-        // Tạo bản copy để sửa
         khoDuocChon = new Kho
             {
-                Ma_Kho = kho.Ma_Kho,
+                // === SỬA === (Dùng "Id")
+                Id = kho.Id,
                 Ten_Kho = kho.Ten_Kho,
                 Ghi_Chu = kho.Ghi_Chu
             };
@@ -115,9 +115,10 @@ else
     {
         try
         {
-            errorMessage = null; // Xóa lỗi cũ
+            errorMessage = null;
 
-            if (khoDuocChon.Ma_Kho == 0) // THÊM MỚI
+            // === SỬA === (Kiểm tra "Id")
+            if (khoDuocChon.Id == 0) // THÊM MỚI
             {
                 await KhoService.AddKho(khoDuocChon);
             }
@@ -131,12 +132,10 @@ else
         }
         catch (Exception ex)
         {
-            // Bắt lỗi (ví dụ: Tên kho bị trùng)
             errorMessage = ex.Message;
         }
     }
 
-    /* HÀM XÓA (ĐÃ CẬP NHẬT TRY...CATCH) */
     private async Task XoaKho(Kho kho)
     {
         bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", new object[] { $"Bạn có chắc muốn xóa kho '{kho.Ten_Kho}' không?" });
@@ -145,13 +144,13 @@ else
         {
             try
             {
-                errorMessage = null; // Xóa lỗi cũ
-                await KhoService.DeleteKho(kho.Ma_Kho);
+                errorMessage = null;
+                // === SỬA === (Truyền "Id" để xóa)
+                await KhoService.DeleteKho(kho.Id);
                 await LoadDanhSach();
             }
             catch (Exception ex)
             {
-                // Bắt lỗi (ví dụ: Lỗi Khóa ngoại 547)
                 errorMessage = ex.Message;
             }
         }

@@ -54,9 +54,9 @@ else
                 <tr>
                     <td>@item.Ngay_Xuat_Kho.ToString("dd/MM/yyyy")</td>
                     <td>@item.So_Phieu_Xuat_Kho</td>
-                    <td>@item.San_Pham_ID</td>
+                    <td>@item.Ma_San_Pham</td>
                     <td>@item.Ten_San_Pham</td>
-                    <td class="text-right">@item.SL_Xuat.ToString("N0")</td>
+                    <td class="text-right">@item.SL_Xuat.ToString("N2")</td>
                     <td class="text-right">@item.Don_Gia_Xuat.ToString("N0")</td>
                     <td class="text-right">@item.Tri_Gia.ToString("N0")</td>
                 </tr>
@@ -70,19 +70,15 @@ else
 }
 
 @code {
-    // Biến cho bộ lọc ngày
-    private DateTime tuNgay = DateTime.Today.AddDays(-7); // Mặc định 7 ngày trước
+    private DateTime tuNgay = DateTime.Today.AddDays(-7);
     private DateTime denNgay = DateTime.Today;
-
-    // Biến lưu dữ liệu báo cáo
     private IEnumerable<BaoCaoChiTietHangXuatViewModel> reportData;
-    private bool isLoading = false; // Biến cờ để hiển thị loading
+    private bool isLoading = false;
 
-    // Hàm được gọi khi nhấn nút "Xem Báo cáo"
     private async Task LoadDataReport()
     {
         isLoading = true;
-        reportData = null; // Xóa dữ liệu cũ
+        reportData = null;
         try
         {
             reportData = await XKService.GetBaoCaoChiTietHangXuat(tuNgay, denNgay);
@@ -90,7 +86,6 @@ else
         catch (Exception ex)
         {
             Console.WriteLine($"Lỗi tải báo cáo: {ex.Message}");
-            // Có thể thêm biến errorMessage để hiển thị lỗi trên UI
         }
         finally
         {

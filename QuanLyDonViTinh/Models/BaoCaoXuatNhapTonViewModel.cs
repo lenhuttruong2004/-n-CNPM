@@ -1,15 +1,15 @@
-﻿namespace QuanLyDonViTinh.Models // Đảm bảo đúng Namespace
+﻿namespace QuanLyDonViTinh.Models
 {
-    // Model chứa dữ liệu cho Báo cáo Xuất Nhập Tồn
     public class BaoCaoXuatNhapTonViewModel
     {
-        public int San_Pham_ID { get; set; } // Giữ lại ID để tham chiếu
-        public string Ma_San_Pham { get; set; } // Cần lấy mã từ bảng SP
-        public string Ten_San_Pham { get; set; } // Lấy từ JOIN
+        public int San_Pham_ID { get; set; }
+        public string Ma_San_Pham { get; set; }
+        public string Ten_San_Pham { get; set; }
 
-        public int SL_Dau_Ky { get; set; }
-        public int SL_Nhap { get; set; }
-        public int SL_Xuat { get; set; }
-        public int SL_Cuoi_Ky { get; set; }
+        // === SỬA === (Đổi tất cả "int" thành "decimal")
+        public decimal SL_Dau_Ky { get; set; }
+        public decimal SL_Nhap { get; set; }
+        public decimal SL_Xuat { get; set; }
+        public decimal SL_Cuoi_Ky { get; set; }
     }
 }

@@ -12,17 +12,17 @@
 <EditForm Model="@spDuocChon" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
 
-    <InputNumber @bind-Value="spDuocChon.Ma_San_Pham" hidden />
+    <InputNumber @bind-Value="spDuocChon.Id" hidden />
 
     <div class="form-group">
         <label>Mã Sản Phẩm:</label>
-        <InputText @bind-Value="spDuocChon.Ma_SP" class="form-control" MaxLength="50" />
-        <ValidationMessage For="@(() => spDuocChon.Ma_SP)" />
+        <InputText @bind-Value="spDuocChon.Ma_San_Pham" class="form-control" MaxLength="50" />
+        <ValidationMessage For="@(() => spDuocChon.Ma_San_Pham)" />
     </div>
 
     <div class="form-group">
         <label>Tên Sản Phẩm:</label>
-        <InputText @bind-Value="spDuocChon.Ten_San_Pham" class="form-control" MaxLength="100" />
+        <InputText @bind-Value="spDuocChon.Ten_San_Pham" class="form-control" MaxLength="200" />
         <ValidationMessage For="@(() => spDuocChon.Ten_San_Pham)" />
     </div>
 
@@ -34,7 +34,7 @@
             {
                 @foreach (var lsp in loaiSanPhams)
                 {
-                    <option value="@lsp.Ma_LSP">@lsp.Ten_LSP</option>
+                    <option value="@lsp.Id">@lsp.Ten_LSP (@lsp.Ma_LSP)</option>
                 }
             }
         </InputSelect>
@@ -49,7 +49,7 @@
             {
                 @foreach (var dvt in donViTinhs)
                 {
-                    <option value="@dvt.Ma_Don_Vi_Tinh">@dvt.Ten_Don_Vi_Tinh</option>
+                    <option value="@dvt.Id">@dvt.Ten_Don_Vi_Tinh</option>
                 }
             }
         </InputSelect>
@@ -57,7 +57,7 @@
     </div>
     <div class="form-group">
         <label>Ghi chú:</label>
-        <InputText @bind-Value="spDuocChon.Ghi_Chu" class="form-control" />
+        <InputText @bind-Value="spDuocChon.Ghi_Chu" class="form-control" MaxLength="500" />
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
@@ -66,10 +66,10 @@
     }
 
     <button type="submit" class="btn btn-primary">
-        @(spDuocChon.Ma_San_Pham == 0 ? "Thêm mới" : "Lưu thay đổi")
+        @(spDuocChon.Id == 0 ? "Thêm mới" : "Lưu thay đổi")
     </button>
 
-    @if (spDuocChon.Ma_San_Pham != 0)
+    @if (spDuocChon.Id != 0)
     {
         <button type="button" class="btn btn-secondary" @onclick="HuyBoSua">Hủy bỏ</button>
     }
@@ -99,7 +99,7 @@ else
             @foreach (var sp in danhSachSP)
             {
                 <tr>
-                    <td>@sp.Ma_SP</td>
+                    <td>@sp.Ma_San_Pham</td>
                     <td>@sp.Ten_San_Pham</td>
                     <td>@sp.Ten_Loai_San_Pham</td>
                     <td>@sp.Ten_Don_Vi_Tinh</td>
@@ -132,6 +132,8 @@ else
 
     private async Task LoadAllData()
     {
+        // Phải đảm bảo LSPService.GetDanhSach() và DVTService.GetDanhSach()
+        // trả về danh sách có "Id" (đã sửa ở các bước trước)
         loaiSanPhams = await LSPService.GetDanhSach();
         donViTinhs = await DVTService.GetDanhSach();
         await LoadDanhSach();
@@ -147,8 +149,9 @@ else
     {
         spDuocChon = new SanPham
             {
+                // === SỬA === (Dùng "Id" và "Ma_San_Pham")
+                Id = sp.Id,
                 Ma_San_Pham = sp.Ma_San_Pham,
-                Ma_SP = sp.Ma_SP,
                 Ten_San_Pham = sp.Ten_San_Pham,
                 Loai_San_Pham_ID = sp.Loai_San_Pham_ID,
                 Don_Vi_Tinh_ID = sp.Don_Vi_Tinh_ID,
@@ -167,7 +170,8 @@ else
     {
         try
         {
-            if (spDuocChon.Ma_San_Pham == 0)
+            // === SỬA === (Kiểm tra "Id")
+            if (spDuocChon.Id == 0)
             {
                 await SPService.AddSanPham(spDuocChon);
             }
@@ -192,9 +196,12 @@ else
         {
             try
             {
-                await SPService.DeleteSanPham(sp.Ma_San_Pham);
-                await LoadAllData(); // Tải lại toàn bộ dữ liệu
-                if (spDuocChon.Ma_San_Pham == sp.Ma_San_Pham)
+                // === SỬA === (Truyền "Id" để xóa)
+                await SPService.DeleteSanPham(sp.Id);
+                await LoadAllData();
+
+                // === SỬA === (So sánh "Id")
+                if (spDuocChon.Id == sp.Id)
                 {
                     HuyBoSua();
                 }

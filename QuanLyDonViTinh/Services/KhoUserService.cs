@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
+using Microsoft.Extensions.Configuration; // Thêm using
 
 namespace QuanLyDonViTinh.Services
 {
@@ -16,16 +17,18 @@ namespace QuanLyDonViTinh.Services
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        /* HÀM LẤY DANH SÁCH (READ) - DÙNG JOIN ĐỂ LẤY TÊN KHO */
+        /* HÀM LẤY DANH SÁCH (READ) - SỬA LẠI JOIN */
         public async Task<IEnumerable<KhoUser>> GetDanhSach()
         {
-            // JOIN với tbl_DM_Kho để lấy tên kho hiển thị lên UI
             string sql = @"
                 SELECT 
-                    ku.Ma_Dang_Nhap, ku.Kho_ID,
-                    k.Ten_Kho -- Lấy tên kho từ bảng tbl_DM_Kho
+                    -- === SỬA ===: Thêm "ku.Id"
+                    ku.Id, ku.Ma_Dang_Nhap, ku.Kho_ID,
+                    k.Ten_Kho-- Lấy tên kho từ bảng tbl_DM_Kho
                 FROM tbl_DM_Kho_User ku
-                LEFT JOIN tbl_DM_Kho k ON ku.Kho_ID = k.Ma_Kho";
+                -- === SỬA ===: JOIN vào "k.Id", không phải "k.Ma_Kho"
+                --(Vì tbl_DM_Kho có khóa chính là "Id"
+                LEFT JOIN tbl_DM_Kho k ON ku.Kho_ID = k.Id";
 
             using (var connection = new SqlConnection(_connectionString))
             {
@@ -36,6 +39,7 @@ namespace QuanLyDonViTinh.Services
         /* HÀM THÊM MỚI (CREATE) */
         public async Task AddKhoUser(KhoUser khoUser)
         {
+            // Câu SQL này đã đúng
             string sql = @"
                 INSERT INTO tbl_DM_Kho_User (Ma_Dang_Nhap, Kho_ID) 
                 VALUES (@Ma_Dang_Nhap, @Kho_ID)";
@@ -48,8 +52,7 @@ namespace QuanLyDonViTinh.Services
             }
             catch (SqlException ex)
             {
-                // Xử lý lỗi Khóa tổng hợp (Composite Key) DUY NHẤT
-                // Mã lỗi 2627 hoặc 2601 xảy ra khi Ma_Dang_Nhap và Kho_ID đã tồn tại
+                // (Logic try-catch này BÂY GIỜ đã đúng, vì ta đã thêm UNIQUE constraint ở file SQL)
                 if (ex.Number == 2627 || ex.Number == 2601)
                 {
                     throw new Exception("Phân quyền này đã tồn tại cho User và Kho được chọn.");
@@ -58,18 +61,15 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* HÀM XÓA (DELETE) */
-        // Cần truyền cả 2 thành phần của khóa chính: Ma_Dang_Nhap và Kho_ID
-        public async Task DeleteKhoUser(string maDangNhap, int khoId)
+        /* HÀM XÓA (DELETE) - SỬA LẠI HOÀN TOÀN */
+        // Phải xóa bằng Khóa Chính "Id", không phải khóa tổng hợp (tưởng tượng)
+        public async Task DeleteKhoUser(int id)
         {
-            string sql = "DELETE FROM tbl_DM_Kho_User WHERE Ma_Dang_Nhap = @Ma_Dang_Nhap AND Kho_ID = @Kho_ID";
+            string sql = "DELETE FROM tbl_DM_Kho_User WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString))
             {
-                await connection.ExecuteAsync(sql, new { Ma_Dang_Nhap = maDangNhap, Kho_ID = khoId });
+                await connection.ExecuteAsync(sql, new { Id = id });
             }
         }
-
-        // Lưu ý: Chúng ta không có hàm Update vì việc Update một khóa tổng hợp
-        // thường là Delete (Xóa) và Add (Thêm) lại cặp mới.
     }
 }

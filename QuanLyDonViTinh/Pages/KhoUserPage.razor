@@ -3,8 +3,8 @@
 @using QuanLyDonViTinh.Models
 @using QuanLyDonViTinh.Services
 @inject KhoUserService KUService
-@inject KhoService KhoService // Để lấy danh sách Kho cho dropdown
-@inject IJSRuntime JSRuntime
+@inject KhoService KhoService
+@inject IJSRumtime JSRuntime
 
 <h3>Phân quyền Kho - User</h3>
 
@@ -25,7 +25,7 @@
             {
                 @foreach (var kho in danhSachKho)
                 {
-                    <option value="@kho.Ma_Kho">@kho.Ten_Kho</option>
+                    <option value="@kho.Id">@kho.Ten_Kho</option>
                 }
             }
         </InputSelect>
@@ -78,27 +78,26 @@ else
 
 @code {
     private IEnumerable<KhoUser> danhSachKhoUser;
-    private IEnumerable<Kho> danhSachKho; // Dùng cho Dropdown Kho
-    private KhoUser khoUserMoi = new KhoUser(); // Không có chức năng Sửa
+    private IEnumerable<Kho> danhSachKho;
+    private KhoUser khoUserMoi = new KhoUser();
     private string errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        // 1. Tải danh sách Kho cho Dropdown
+        // (Phải đảm bảo KhoService.GetDanhSach() trả về danh sách có "Id")
         danhSachKho = await KhoService.GetDanhSach();
-        // 2. Tải danh sách Phân quyền
         await LoadDanhSach();
     }
 
     private async Task LoadDanhSach()
     {
+        // (KUService.GetDanhSach() giờ đã trả về danh sách có "Id")
         danhSachKhoUser = await KUService.GetDanhSach();
         errorMessage = null;
     }
 
     private void ResetForm()
     {
-        // Giữ lại Mã Đăng Nhập cho lần phân quyền tiếp theo, nhưng reset Kho_ID
         string tempMaDangNhap = khoUserMoi.Ma_Dang_Nhap;
         khoUserMoi = new KhoUser { Ma_Dang_Nhap = tempMaDangNhap };
         errorMessage = null;
@@ -108,7 +107,7 @@ else
     {
         try
         {
-            // Đảm bảo người dùng đã chọn Kho
+            // (Logic kiểm tra Kho_ID == 0 của bạn đã đúng)
             if (khoUserMoi.Kho_ID == 0)
             {
                 errorMessage = "Vui lòng chọn Kho để phân quyền.";
@@ -134,8 +133,10 @@ else
         {
             try
             {
-                // Cần truyền cả 2 thành phần của khóa chính tổng hợp để xóa
-                await KUService.DeleteKhoUser(ku.Ma_Dang_Nhap, ku.Kho_ID);
+                // === SỬA ===
+                // Xóa bằng Khóa Chính "Id", không phải cặp (Ma_Dang_Nhap, Kho_ID)
+                // (Vì "ku" giờ đã có "Id" từ hàm GetDanhSach())
+                await KUService.DeleteKhoUser(ku.Id);
                 await LoadDanhSach();
             }
             catch (Exception ex)

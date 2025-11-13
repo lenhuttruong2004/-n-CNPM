@@ -10,17 +10,23 @@
 <EditForm Model="@nccDuocChon" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
 
-    <InputNumber @bind-Value="nccDuocChon.Ma_NCC" hidden />
+    <InputNumber @bind-Value="nccDuocChon.Id" hidden />
+
+    <div class="form-group">
+        <label>Mã Nhà Cung Cấp:</label>
+        <InputText @bind-Value="nccDuocChon.Ma_NCC" class="form-control" MaxLength="50" />
+        <ValidationMessage For="@(() => nccDuocChon.Ma_NCC)" />
+    </div>
 
     <div class="form-group">
         <label>Tên Nhà Cung Cấp:</label>
-        <InputText @bind-Value="nccDuocChon.Ten_NCC" class="form-control" />
+        <InputText @bind-Value="nccDuocChon.Ten_NCC" class="form-control" MaxLength="200" />
         <ValidationMessage For="@(() => nccDuocChon.Ten_NCC)" />
     </div>
 
     <div class="form-group">
         <label>Ghi chú:</label>
-        <InputText @bind-Value="nccDuocChon.Ghi_Chu" class="form-control" />
+        <InputText @bind-Value="nccDuocChon.Ghi_Chu" class="form-control" MaxLength="500" />
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
@@ -29,10 +35,10 @@
     }
 
     <button type="submit" class="btn btn-primary">
-        @(nccDuocChon.Ma_NCC == 0 ? "Thêm mới" : "Lưu thay đổi")
+        @(nccDuocChon.Id == 0 ? "Thêm mới" : "Lưu thay đổi")
     </button>
 
-    @if (nccDuocChon.Ma_NCC != 0)
+    @if (nccDuocChon.Id != 0)
     {
         <button type="button" class="btn btn-secondary" @onclick="HuyBoSua">Hủy bỏ</button>
     }
@@ -95,9 +101,10 @@ else
 
     private void ChonDeSua(NhaCungCap ncc)
     {
-        // Tạo bản copy để sửa
+        // === SỬA === (Copy "Id" và "Ma_NCC" (string))
         nccDuocChon = new NhaCungCap
             {
+                Id = ncc.Id,
                 Ma_NCC = ncc.Ma_NCC,
                 Ten_NCC = ncc.Ten_NCC,
                 Ghi_Chu = ncc.Ghi_Chu
@@ -115,7 +122,8 @@ else
     {
         try
         {
-            if (nccDuocChon.Ma_NCC == 0) // THÊM MỚI
+            // === SỬA === (Kiểm tra "Id")
+            if (nccDuocChon.Id == 0) // THÊM MỚI
             {
                 await NCCService.AddNhaCungCap(nccDuocChon);
             }
@@ -141,10 +149,12 @@ else
         {
             try
             {
-                await NCCService.DeleteNhaCungCap(ncc.Ma_NCC);
+                // === SỬA === (Truyền "Id" để xóa)
+                await NCCService.DeleteNhaCungCap(ncc.Id);
                 await LoadDanhSach();
 
-                if (nccDuocChon.Ma_NCC == ncc.Ma_NCC)
+                // === SỬA === (So sánh "Id")
+                if (nccDuocChon.Id == ncc.Id)
                 {
                     HuyBoSua();
                 }

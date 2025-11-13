@@ -19,6 +19,7 @@ namespace QuanLyDonViTinh.Services
 
         public async Task<IEnumerable<DonViTinh>> GetDanhSach()
         {
+            // "SELECT *" sẽ tự động map "Id" trong DB với "Id" trong Model
             string sql = "SELECT * FROM tbl_DM_Don_Vi_Tinh";
             using (var connection = new SqlConnection(_connectionString))
             {
@@ -28,7 +29,9 @@ namespace QuanLyDonViTinh.Services
 
         public async Task<DonViTinh> GetDonViTinhById(int id)
         {
-            string sql = "SELECT * FROM tbl_DM_Don_Vi_Tinh WHERE Ma_Don_Vi_Tinh = @Id";
+            // === SỬA ===
+            // Sửa "Ma_Don_Vi_Tinh" thành "Id"
+            string sql = "SELECT * FROM tbl_DM_Don_Vi_Tinh WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString))
             {
                 return await connection.QuerySingleOrDefaultAsync<DonViTinh>(sql, new { Id = id });
@@ -48,10 +51,18 @@ namespace QuanLyDonViTinh.Services
                 throw new Exception("Tên đơn vị tính không được để trống.");
             }
 
-            // 3. Kiểm tra độ dài (Ví dụ: giả sử DB thiết lập NVARCHAR(50))
-            if (donViTinh.Ten_Don_Vi_Tinh.Length > 50)
+            // 3. Kiểm tra độ dài
+            // === SỬA ===
+            // Sửa "50" thành "100" và cập nhật thông báo lỗi
+            if (donViTinh.Ten_Don_Vi_Tinh.Length > 100)
             {
-                throw new Exception("Tên đơn vị tính không được vượt quá 50 ký tự.");
+                throw new Exception("Tên đơn vị tính không được vượt quá 100 ký tự.");
+            }
+
+            // (Bạn có thể thêm kiểm tra độ dài cho Ghi_Chu nếu muốn)
+            if (donViTinh.Ghi_Chu?.Length > 500)
+            {
+                throw new Exception("Ghi chú không được vượt quá 500 ký tự.");
             }
         }
 
@@ -60,6 +71,8 @@ namespace QuanLyDonViTinh.Services
         {
             ValidateDonViTinh(donViTinh); // Gọi hàm kiểm tra
 
+            // Câu lệnh SQL này vẫn đúng vì Dapper sẽ map thuộc tính 
+            // "Ten_Don_Vi_Tinh" và "Ghi_Chu" của đối tượng vào tham số
             string sql = "INSERT INTO tbl_DM_Don_Vi_Tinh (Ten_Don_Vi_Tinh, Ghi_Chu) VALUES (@Ten_Don_Vi_Tinh, @Ghi_Chu)";
             try
             {
@@ -80,10 +93,15 @@ namespace QuanLyDonViTinh.Services
         /* HÀM CẬP NHẬT (UPDATE) */
         public async Task UpdateDonViTinh(DonViTinh donViTinh)
         {
-            if (donViTinh.Ma_Don_Vi_Tinh <= 0) throw new Exception("ID không hợp lệ.");
+            // === SỬA ===
+            // Sửa "donViTinh.Ma_Don_Vi_Tinh" thành "donViTinh.Id"
+            if (donViTinh.Id <= 0) throw new Exception("ID không hợp lệ.");
             ValidateDonViTinh(donViTinh); // Gọi hàm kiểm tra
 
-            string sql = "UPDATE tbl_DM_Don_Vi_Tinh SET Ten_Don_Vi_Tinh = @Ten_Don_Vi_Tinh, Ghi_Chu = @Ghi_Chu WHERE Ma_Don_Vi_Tinh = @Ma_Don_Vi_Tinh";
+            // === SỬA ===
+            // Sửa "Ma_Don_Vi_Tinh = @Ma_Don_Vi_Tinh" thành "Id = @Id"
+            // Dapper sẽ tự động map "donViTinh.Id" vào tham số "@Id"
+            string sql = "UPDATE tbl_DM_Don_Vi_Tinh SET Ten_Don_Vi_Tinh = @Ten_Don_Vi_Tinh, Ghi_Chu = @Ghi_Chu WHERE Id = @Id";
             try
             {
                 using (var connection = new SqlConnection(_connectionString))
@@ -104,7 +122,9 @@ namespace QuanLyDonViTinh.Services
         {
             if (id <= 0) throw new Exception("ID không hợp lệ.");
 
-            string sql = "DELETE FROM tbl_DM_Don_Vi_Tinh WHERE Ma_Don_Vi_Tinh = @Id";
+            // === SỬA ===
+            // Sửa "Ma_Don_Vi_Tinh" thành "Id"
+            string sql = "DELETE FROM tbl_DM_Don_Vi_Tinh WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString))
             {
                 try
