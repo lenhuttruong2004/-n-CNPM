@@ -11,6 +11,11 @@
     <DataAnnotationsValidator />
 
     <InputNumber @bind-Value="lspDuocChon.Ma_LSP" hidden />
+    <div class="form-group">
+        <label>Mã Loại SP:</label>
+        <InputText @bind-Value="lspDuocChon.Ma_Loai_SP" class="form-control" MaxLength="20" />
+        <ValidationMessage For="@(() => lspDuocChon.Ma_Loai_SP)" />
+    </div>
 
     <div class="form-group">
         <label>Tên Loại SP:</label>
@@ -98,6 +103,7 @@ else
         lspDuocChon = new LoaiSanPham
             {
                 Ma_LSP = lsp.Ma_LSP,
+                Ma_Loai_SP = lsp.Ma_Loai_SP,
                 Ten_LSP = lsp.Ten_LSP,
                 Ghi_Chu = lsp.Ghi_Chu
             };

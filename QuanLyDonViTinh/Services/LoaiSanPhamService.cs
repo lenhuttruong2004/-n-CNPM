@@ -21,8 +21,13 @@ namespace QuanLyDonViTinh.Services
         private void StandardizeInput(LoaiSanPham loaiSanPham)
         {
             if (loaiSanPham == null) return;
+            loaiSanPham.Ma_Loai_SP = loaiSanPham.Ma_Loai_SP?.Trim().ToUpper();
             loaiSanPham.Ten_LSP = loaiSanPham.Ten_LSP?.Trim();
             loaiSanPham.Ghi_Chu = loaiSanPham.Ghi_Chu?.Trim();
+            if (loaiSanPham.Ma_Loai_SP != null && loaiSanPham.Ma_Loai_SP.Length > 20)
+            {
+                loaiSanPham.Ma_Loai_SP = loaiSanPham.Ma_Loai_SP.Substring(0, 20);
+            }
             if (loaiSanPham.Ten_LSP != null && loaiSanPham.Ten_LSP.Length > 50)
             {
                 loaiSanPham.Ten_LSP = loaiSanPham.Ten_LSP.Substring(0, 50);
@@ -32,7 +37,8 @@ namespace QuanLyDonViTinh.Services
         // --- ĐÃ BỔ SUNG LẠI HÀM NÀY ---
         public async Task<IEnumerable<LoaiSanPham>> GetDanhSach()
         {
-            string sql = "SELECT * FROM tbl_DM_Loai_San_Pham";
+            // Sửa SQL: Thêm Ma_Loai_SP
+            string sql = "SELECT Ma_LSP, Ma_Loai_SP, Ten_LSP, Ghi_Chu FROM tbl_DM_Loai_San_Pham";
             using (var connection = new SqlConnection(_connectionString))
             {
                 return await connection.QueryAsync<LoaiSanPham>(sql);
@@ -52,7 +58,8 @@ namespace QuanLyDonViTinh.Services
         public async Task AddLoaiSanPham(LoaiSanPham loaiSanPham)
         {
             StandardizeInput(loaiSanPham);
-            string sql = "INSERT INTO tbl_DM_Loai_San_Pham (Ten_LSP, Ghi_Chu) VALUES (@Ten_LSP, @Ghi_Chu)";
+            // Sửa SQL: Thêm Ma_Loai_SP
+            string sql = "INSERT INTO tbl_DM_Loai_San_Pham (Ma_Loai_SP, Ten_LSP, Ghi_Chu) VALUES (@Ma_Loai_SP, @Ten_LSP, @Ghi_Chu)";
             try
             {
                 using (var connection = new SqlConnection(_connectionString))
@@ -62,7 +69,8 @@ namespace QuanLyDonViTinh.Services
             }
             catch (SqlException ex)
             {
-                if (ex.Number == 2627 || ex.Number == 2601) throw new Exception("Tên loại sản phẩm này đã tồn tại.");
+                // Sửa thông báo lỗi
+                if (ex.Number == 2627 || ex.Number == 2601) throw new Exception("Lỗi: Mã hoặc Tên loại sản phẩm này đã tồn tại.");
                 else throw;
             }
         }
@@ -70,7 +78,8 @@ namespace QuanLyDonViTinh.Services
         public async Task UpdateLoaiSanPham(LoaiSanPham loaiSanPham)
         {
             StandardizeInput(loaiSanPham);
-            string sql = "UPDATE tbl_DM_Loai_San_Pham SET Ten_LSP = @Ten_LSP, Ghi_Chu = @Ghi_Chu WHERE Ma_LSP = @Ma_LSP";
+            // Sửa SQL: Thêm Ma_Loai_SP
+            string sql = "UPDATE tbl_DM_Loai_San_Pham SET Ma_Loai_SP = @Ma_Loai_SP, Ten_LSP = @Ten_LSP, Ghi_Chu = @Ghi_Chu WHERE Ma_LSP = @Ma_LSP";
             try
             {
                 using (var connection = new SqlConnection(_connectionString))
@@ -80,7 +89,8 @@ namespace QuanLyDonViTinh.Services
             }
             catch (SqlException ex)
             {
-                if (ex.Number == 2627 || ex.Number == 2601) throw new Exception("Tên loại sản phẩm này đã tồn tại.");
+                // Sửa thông báo lỗi
+                if (ex.Number == 2627 || ex.Number == 2601) throw new Exception("Lỗi: Mã hoặc Tên loại sản phẩm này đã tồn tại.");
                 else throw;
             }
         }
