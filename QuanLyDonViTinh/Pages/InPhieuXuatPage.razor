@@ -31,7 +31,7 @@
                 var khoList = (await KhoService.GetDanhSach()).ToList();
 
                 // Gán tên Kho
-                ViewModel.Header.Ten_Kho = khoList.FirstOrDefault(k => k.Ma_Kho == ViewModel.Header.Kho_ID)?.Ten_Kho;
+                ViewModel.Header.Ten_Kho = khoList.FirstOrDefault(k => k.Id == ViewModel.Header.Kho_ID)?.Ten_Kho;
             }
         }
     }
@@ -93,13 +93,13 @@ else
                 @foreach (var detail in ViewModel.Details)
                 {
                     // Lấy thông tin ĐVT từ danh sách Sản phẩm và ĐVT
-                    var sanPham = sanPhamList?.FirstOrDefault(sp => sp.Ma_San_Pham == detail.San_Pham_ID);
-                    var dvt = dvtList?.FirstOrDefault(d => d.Ma_Don_Vi_Tinh == sanPham?.Don_Vi_Tinh_ID);
+                    var sanPham = sanPhamList?.FirstOrDefault(sp => sp.Id == detail.San_Pham_ID);
+                    var dvt = dvtList?.FirstOrDefault(d => d.Id == sanPham?.Don_Vi_Tinh_ID);
 
                     <tr>
                         <td class="text-center">@(stt++)</td>
                         <td>@(sanPham?.Ma_San_Pham)</td>
-                        <td>@detail.Ten_San_Pham</td>
+                        <td>@detail.Ten_San_Pham</td>   
                         <td></td>
                         <td></td>
                         <td class="text-center">@detail.SL_Xuat.ToString("N0")</td>

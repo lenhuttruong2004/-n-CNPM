@@ -86,10 +86,10 @@ else
                     <tr>
                         <td>@(stt++)</td>
                         <td>@detail.Ten_San_Pham</td>
-                        <td>@detail.San_Pham_ID</td>
+                        <td>@detail.Ma_San_Pham</td>
                         <td>@detail.Ten_Don_Vi_Tinh</td>
-                        <td>@detail.SL_Nhap.ToString("N0")</td>
-                        <td>@detail.SL_Nhap.ToString("N0")</td>
+                        <td>@detail.SL_Nhap.ToString("N2")</td>
+                        <td>@detail.SL_Nhap.ToString("N2")</td>
                         <td>@detail.Don_Gia_Nhap.ToString("N0")</td>
                         <td class="text-right">@((detail.SL_Nhap * detail.Don_Gia_Nhap).ToString("N0"))</td>
                     </tr>
@@ -146,8 +146,8 @@ else
                 var tenKho = await KhoService.GetDanhSach();
                 var tenNCC = await NCCService.GetDanhSach();
 
-                ViewModel.Header.Ten_Kho = tenKho.FirstOrDefault(k => k.Ma_Kho == ViewModel.Header.Kho_ID)?.Ten_Kho;
-                ViewModel.Header.Ten_NCC = tenNCC.FirstOrDefault(n => n.Ma_NCC == ViewModel.Header.NCC_ID)?.Ten_NCC;
+                ViewModel.Header.Ten_Kho = tenKho.FirstOrDefault(k => k.Id == ViewModel.Header.Kho_ID)?.Ten_Kho;
+                ViewModel.Header.Ten_NCC = tenNCC.FirstOrDefault(n => n.Id == ViewModel.Header.NCC_ID)?.Ten_NCC;
             }
         }
     }

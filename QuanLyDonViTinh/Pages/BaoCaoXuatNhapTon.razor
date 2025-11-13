@@ -51,12 +51,12 @@ else
             @foreach (var item in reportData)
             {
                 <tr>
-                    <td>@item.San_Pham_ID</td>
+                    <td>@item.Ma_San_Pham</td>
                     <td>@item.Ten_San_Pham</td>
-                    <td class="text-right">@item.SL_Dau_Ky.ToString("N0")</td>
-                    <td class="text-right">@item.SL_Nhap.ToString("N0")</td>
-                    <td class="text-right">@item.SL_Xuat.ToString("N0")</td>
-                    <td class="text-right">@item.SL_Cuoi_Ky.ToString("N0")</td>
+                    <td class="text-right">@item.SL_Dau_Ky.ToString("N2")</td>
+                    <td class="text-right">@item.SL_Nhap.ToString("N2")</td>
+                    <td class="text-right">@item.SL_Xuat.ToString("N2")</td>
+                    <td class="text-right">@item.SL_Cuoi_Ky.ToString("N2")</td>
                 </tr>
 			}
 
