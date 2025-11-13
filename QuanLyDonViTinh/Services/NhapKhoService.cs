@@ -95,9 +95,11 @@ namespace QuanLyDonViTinh.Services
             string sql = @"
                 SELECT 
                     nkr.ID, nkr.Nhap_Kho_ID, nkr.San_Pham_ID, nkr.SL_Nhap, nkr.Don_Gia_Nhap,
-                    sp.Ten_San_Pham
+                    sp.Ten_San_Pham,
+                    dvt.Ten_Don_Vi_Tinh  -- Dòng thêm mới
                 FROM tbl_DM_Nhap_Kho_Raw_Data nkr
                 LEFT JOIN tbl_DM_San_Pham sp ON nkr.San_Pham_ID = sp.Ma_San_Pham
+                LEFT JOIN tbl_DM_Don_Vi_Tinh dvt ON sp.Don_Vi_Tinh_ID = dvt.Ma_Don_Vi_Tinh -- Dòng thêm mới
                 WHERE nkr.Nhap_Kho_ID = @Ma_NK
             ";
             using (var connection = new SqlConnection(_connectionString))
