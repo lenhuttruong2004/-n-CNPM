@@ -22,12 +22,12 @@ namespace QuanLyDonViTinh.Services
         {
             string sql = @"
                 SELECT 
-                    -- === SỬA ===: Thêm "ku.Id"
+                    -- === SỬA ===: Thêm ""ku.Id""  <-- SỬA Ở ĐÂY
                     ku.Id, ku.Ma_Dang_Nhap, ku.Kho_ID,
                     k.Ten_Kho-- Lấy tên kho từ bảng tbl_DM_Kho
                 FROM tbl_DM_Kho_User ku
-                -- === SỬA ===: JOIN vào "k.Id", không phải "k.Ma_Kho"
-                --(Vì tbl_DM_Kho có khóa chính là "Id"
+                -- === SỬA ===: JOIN vào ""k.Id"", không phải ""k.Ma_Kho""  <-- SỬA Ở ĐÂY
+                --(Vì tbl_DM_Kho có khóa chính là ""Id""  <-- SỬA Ở ĐÂY
                 LEFT JOIN tbl_DM_Kho k ON ku.Kho_ID = k.Id";
 
             using (var connection = new SqlConnection(_connectionString))

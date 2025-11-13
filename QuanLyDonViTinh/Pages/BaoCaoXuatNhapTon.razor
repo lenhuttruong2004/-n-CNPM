@@ -34,34 +34,41 @@ else if (!reportData.Any())
 {
     <p><em>Không tìm thấy dữ liệu phát sinh hoặc tồn kho cho khoảng ngày đã chọn.</em></p>
 }
+@page "/baocao/xuatnhapton"
+@using QuanLyDonViTinh.Models
+@using QuanLyDonViTinh.Services
+@inject ReportService ReportService
+
+...
 else
 {
-    <table class="table table-striped table-bordered" border="1" style="border-collapse: collapse; width: 100%;">
-        <thead>
+<table class="table table-striped table-bordered" border="1" style="border-collapse: collapse; width: 100%;">
+    <thead>
+        <tr>
+            <th>Mã sản phẩm</th>
+            <th>Tên sản phẩm</th>
+            <th class="text-right">SL Đầu Kỳ</th>
+            <th class="text-right">SL Nhập</th>
+            <th class="text-right">SL Xuất</th>
+            <th class="text-right">SL Cuối Kỳ</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in reportData)
+        {
             <tr>
-                <th>Mã sản phẩm</th>
-                <th>Tên sản phẩm</th>
-                <th class="text-right">SL Đầu Kỳ</th>
-                <th class="text-right">SL Nhập</th>
-                <th class="text-right">SL Xuất</th>
-                <th class="text-right">SL Cuối Kỳ</th>
+                <td>@item.Ma_San_Pham</td>
+                <td>@item.Ten_San_Pham</td>
+                <td class="text-right">@item.SL_Dau_Ky.ToString("N2")</td>
+                <td class="text-right">@item.SL_Nhap.ToString("N2")</td>
+                <td class="text-right">@item.SL_Xuat.ToString("N2")</td>
+                <td class="text-right">@item.SL_Cuoi_Ky.ToString("N2")</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in reportData)
-            {
-                <tr>
-                    <td>@item.Ma_San_Pham</td>
-                    <td>@item.Ten_San_Pham</td>
-                    <td class="text-right">@item.SL_Dau_Ky.ToString("N2")</td>
-                    <td class="text-right">@item.SL_Nhap.ToString("N2")</td>
-                    <td class="text-right">@item.SL_Xuat.ToString("N2")</td>
-                    <td class="text-right">@item.SL_Cuoi_Ky.ToString("N2")</td>
-                </tr>
-			}
-
-        </tbody>
-    </table>
+        }
+    </tbody>
+</table>
+}
+    
 }
 @code {
     // Biến cho bộ lọc ngày

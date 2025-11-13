@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
+// using Microsoft.AspNetCore.DataProtection.KeyManagement; // Dòng này có vẻ không cần thiết, bạn có thể xóa
 
 namespace QuanLyDonViTinh.Services
 {
@@ -38,23 +38,25 @@ namespace QuanLyDonViTinh.Services
         /* === SỬA TOÀN BỘ HÀM NÀY === */
         public async Task<IEnumerable<SanPham>> GetDanhSach()
         {
+            // === SỬA LỖI CÚ PHÁP: Các dấu "" và đóng chuỗi SQL ===
             string sql = @"
                 SELECT 
-                    -- Sửa: Lấy "Id" và "Ma_San_Pham" (thay vì Ma_San_Pham và Ma_SP)
+                    -- Sửa: Lấy ""Id"" và ""Ma_San_Pham"" (thay vì Ma_San_Pham và Ma_SP)
                     sp.Id, sp.Ma_San_Pham, sp.Ten_San_Pham, sp.Loai_San_Pham_ID, sp.Don_Vi_Tinh_ID, sp.Ghi_Chu,
                     lsp.Ten_LSP AS Ten_Loai_San_Pham,
                     dvt.Ten_Don_Vi_Tinh AS Ten_Don_Vi_Tinh
                 FROM tbl_DM_San_Pham sp
 
-
-                --Sửa: JOIN vào "Id"(PK) của bảng LoaiSanPham, không phải "Ma_LSP"(Business Key)
+                --Sửa: JOIN vào ""Id""(PK) của bảng LoaiSanPham, không phải ""Ma_LSP""(Business Key)
                 LEFT JOIN tbl_DM_Loai_San_Pham lsp ON sp.Loai_San_Pham_ID = lsp.Id
 
-                -- Sửa: JOIN vào "Id"(PK) của bảng DonViTinh, không phải "Ma_Don_Vi_Tinh"(Business Key)
+                -- Sửa: JOIN vào ""Id""(PK) của bảng DonViTinh, không phải ""Ma_Don_Vi_Tinh""(Business Key)
                 LEFT JOIN tbl_DM_Don_Vi_Tinh dvt ON sp.Don_Vi_Tinh_ID = dvt.Id
-
+                
                 -- Sửa: Sắp xếp theo Id(PK) để cái mới nhất lên đầu
-                ORDER BY sp.Id DESC";
+                ORDER BY sp.Id DESC"; // <-- Lỗi 1: Chuỗi SQL phải được đóng ở đây
+
+            // Lỗi 2: Khối using này đã bị dán vào BÊN TRONG chuỗi sql ở code của bạn
             using (var connection = new SqlConnection(_connectionString))
             {
                 return await connection.QueryAsync<SanPham>(sql);
@@ -93,13 +95,14 @@ namespace QuanLyDonViTinh.Services
             if (sanPham == null) throw new ArgumentNullException(nameof(sanPham));
             StandardizeInput(sanPham);
 
+            // === SỬA LỖI CÚ PHÁP: Dấu "" trong chú thích ===
             string sql = @"UPDATE tbl_DM_San_Pham SET 
                                 Ma_San_Pham = @Ma_San_Pham,
                                 Ten_San_Pham = @Ten_San_Pham, 
                                 Loai_San_Pham_ID = @Loai_San_Pham_ID, 
                                 Don_Vi_Tinh_ID = @Don_Vi_Tinh_ID, 
                                 Ghi_Chu = @Ghi_Chu 
-                           -- Sửa: WHERE bằng Khóa Chính "Id" (không phải Ma_San_Pham)
+                           -- Sửa: WHERE bằng Khóa Chính ""Id"" (không phải Ma_San_Pham)
                            WHERE Id = @Id";
             try
             {

@@ -59,7 +59,7 @@ else
             <thead class="thead-light">
                 <tr>
                     <th>STT</th>
-                    <th>Tên nhãn hiệu, quy cách, phẩm chất, vật tư, dụng cụ, sản phẩm, hàng hóa</th>
+                    <th>Tên nhãn hiệu...</th>
                     <th>Mã Hàng</th>
                     <th>Đơn Vị Tính</th>
                     <th colspan="2">Số Lượng</th>
@@ -139,6 +139,7 @@ else
     {
         if (MaNK > 0)
         {
+            // (Giả định GetPhieuNhapView đã được sửa để SELECT Ma_San_Pham và Ten_Don_Vi_Tinh)
             ViewModel = await NKService.GetPhieuNhapView(MaNK);
 
             if (ViewModel != null)
@@ -146,7 +147,9 @@ else
                 var tenKho = await KhoService.GetDanhSach();
                 var tenNCC = await NCCService.GetDanhSach();
 
+                // === SỬA === (Lookup bằng "Id", không phải "Ma_Kho")
                 ViewModel.Header.Ten_Kho = tenKho.FirstOrDefault(k => k.Id == ViewModel.Header.Kho_ID)?.Ten_Kho;
+                // === SỬA === (Lookup bằng "Id", không phải "Ma_NCC")
                 ViewModel.Header.Ten_NCC = tenNCC.FirstOrDefault(n => n.Id == ViewModel.Header.NCC_ID)?.Ten_NCC;
             }
         }

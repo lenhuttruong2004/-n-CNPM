@@ -7,35 +7,16 @@
 @inject KhoService KhoService
 @inject SanPhamService SPService
 @inject DonViTinhService DVTService
-
-@code {
-    [Parameter]
-    public int MaXK { get; set; } // Lấy từ URL
-
-    private PhieuXuatViewModel ViewModel { get; set; }
-    private List<SanPham> sanPhamList; // Để tra cứu ĐVT
-    private List<DonViTinh> dvtList;
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (MaXK > 0)
-        {
-            // Tải dữ liệu chính
-            ViewModel = await XKService.GetPhieuXuatView(MaXK);
-
-            if (ViewModel != null)
-            {
-                // Tải dữ liệu phụ
-                sanPhamList = (await SPService.GetDanhSach()).ToList();
-                dvtList = (await DVTService.GetDanhSach()).ToList();
-                var khoList = (await KhoService.GetDanhSach()).ToList();
-
-                // Gán tên Kho
-                ViewModel.Header.Ten_Kho = khoList.FirstOrDefault(k => k.Id == ViewModel.Header.Kho_ID)?.Ten_Kho;
-            }
-        }
-    }
-}
+@inject IJSRuntime JSRuntime         
+@inject NavigationManager NavigationManager 
+<div class="container p-4 border" style='font-family:"Times New Roman", Times, serif; font-size:11pt; max-width:800px;'>
+    <button class="btn btn-primary" @onclick='() => JSRuntime.InvokeVoidAsync("window.print")'>
+        <span class="oi oi-print"></span> In Phiếu
+    </button>
+    <button class="btn btn-secondary" @onclick="TroVe">
+        <span class="oi oi-arrow-left"></span> Trở Về
+    </button>
+</div>
 
 @if (ViewModel == null)
 {
@@ -72,6 +53,7 @@ else
         <div style="border-bottom: 1px solid black; border-top: 1px solid black; padding: 5px 0; margin-top: 10px;">
             <b>II. Thông tin hàng</b>
         </div>
+        
         <table class="table table-sm table-bordered mt-2" style="font-size: 10pt; color: black;">
             <thead class="thead-light text-center">
                 <tr>
@@ -92,18 +74,14 @@ else
                 }
                 @foreach (var detail in ViewModel.Details)
                 {
-                    // Lấy thông tin ĐVT từ danh sách Sản phẩm và ĐVT
-                    var sanPham = sanPhamList?.FirstOrDefault(sp => sp.Id == detail.San_Pham_ID);
-                    var dvt = dvtList?.FirstOrDefault(d => d.Id == sanPham?.Don_Vi_Tinh_ID);
-
                     <tr>
                         <td class="text-center">@(stt++)</td>
-                        <td>@(sanPham?.Ma_San_Pham)</td>
-                        <td>@detail.Ten_San_Pham</td>   
+                        <td>@detail.Ma_San_Pham</td>
+                        <td>@detail.Ten_San_Pham</td>
                         <td></td>
                         <td></td>
-                        <td class="text-center">@detail.SL_Xuat.ToString("N0")</td>
-                        <td class="text-center">@dvt?.Ten_Don_Vi_Tinh</td>
+                        <td class="text-center">@detail.SL_Xuat.ToString("N2")</td>
+                        <td class="text-center">@detail.Ten_Don_Vi_Tinh</td>
                         <td></td>
                         <td></td>
                     </tr>
@@ -131,4 +109,38 @@ else
         </div>
 
     </div>
+}
+
+
+@code {
+    [Parameter]
+    public int MaXK { get; set; } 
+
+    private PhieuXuatViewModel ViewModel { get; set; }
+    // XÓA: private List<SanPham> sanPhamList;
+    // XÓA: private List<DonViTinh> dvtList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (MaXK > 0)
+        {
+            // Tải dữ liệu chính (Giả định GetPhieuXuatView đã được sửa)
+            ViewModel = await XKService.GetPhieuXuatView(MaXK);
+
+            if (ViewModel != null)
+            {
+                // XÓA: Tải sanPhamList và dvtList
+                var khoList = (await KhoService.GetDanhSach()).ToList();
+
+                // SỬA: Tra cứu bằng "Id", không phải "Ma_Kho"
+                ViewModel.Header.Ten_Kho = khoList.FirstOrDefault(k => k.Id == ViewModel.Header.Kho_ID)?.Ten_Kho;
+            }
+        }
+    }
+
+    // === THÊM HÀM NÀY ===
+    private void TroVe()
+    {
+        NavigationManager.NavigateTo("/xuatkho"); // Hoặc trang danh sách phiếu xuất của bạn
+    }
 }
