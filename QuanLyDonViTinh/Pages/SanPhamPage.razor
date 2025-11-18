@@ -17,13 +17,13 @@
     <div class="form-group">
         <label>Mã Sản Phẩm:</label>
         <InputText @bind-Value="spDuocChon.Ma_San_Pham" class="form-control" MaxLength="50" />
-        <ValidationMessage For="@(() => spDuocChon.Ma_San_Pham)" />
+        <ValidationMessage For="@(() => spDuocChon.Ma_San_Pham)" style="color:red;" />
     </div>
 
     <div class="form-group">
         <label>Tên Sản Phẩm:</label>
         <InputText @bind-Value="spDuocChon.Ten_San_Pham" class="form-control" MaxLength="200" />
-        <ValidationMessage For="@(() => spDuocChon.Ten_San_Pham)" />
+        <ValidationMessage For="@(() => spDuocChon.Ten_San_Pham)" style="color:red;" />
     </div>
 
     <div class="form-group">
@@ -38,7 +38,7 @@
                 }
             }
         </InputSelect>
-        <ValidationMessage For="@(() => spDuocChon.Loai_San_Pham_ID)" />
+        <ValidationMessage For="@(() => spDuocChon.Loai_San_Pham_ID)" style="color:red;" />
     </div>
 
     <div class="form-group">
@@ -53,8 +53,9 @@
                 }
             }
         </InputSelect>
-        <ValidationMessage For="@(() => spDuocChon.Don_Vi_Tinh_ID)" />
+        <ValidationMessage For="@(() => spDuocChon.Don_Vi_Tinh_ID)" style="color:red;" />
     </div>
+
     <div class="form-group">
         <label>Ghi chú:</label>
         <InputText @bind-Value="spDuocChon.Ghi_Chu" class="form-control" MaxLength="500" />
@@ -62,7 +63,7 @@
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-danger" style="color: red;">@errorMessage</div>
+        <div class="alert alert-danger" style="color:red;">@errorMessage</div>
     }
 
     <button type="submit" class="btn btn-primary">
@@ -132,8 +133,6 @@ else
 
     private async Task LoadAllData()
     {
-        // Phải đảm bảo LSPService.GetDanhSach() và DVTService.GetDanhSach()
-        // trả về danh sách có "Id" (đã sửa ở các bước trước)
         loaiSanPhams = await LSPService.GetDanhSach();
         donViTinhs = await DVTService.GetDanhSach();
         await LoadDanhSach();
@@ -149,7 +148,6 @@ else
     {
         spDuocChon = new SanPham
             {
-                // === SỬA === (Dùng "Id" và "Ma_San_Pham")
                 Id = sp.Id,
                 Ma_San_Pham = sp.Ma_San_Pham,
                 Ten_San_Pham = sp.Ten_San_Pham,
@@ -170,7 +168,17 @@ else
     {
         try
         {
-            // === SỬA === (Kiểm tra "Id")
+            // Chuẩn hóa Mã SP
+            spDuocChon.Ma_San_Pham = spDuocChon.Ma_San_Pham?.Trim().ToUpper();
+
+            // Kiểm tra trùng Mã SP
+            bool maDaTonTai = danhSachSP.Any(s => s.Ma_San_Pham == spDuocChon.Ma_San_Pham && s.Id != spDuocChon.Id);
+            if (maDaTonTai)
+            {
+                errorMessage = $"Mã sản phẩm '{spDuocChon.Ma_San_Pham}' đã tồn tại.";
+                return;
+            }
+
             if (spDuocChon.Id == 0)
             {
                 await SPService.AddSanPham(spDuocChon);
@@ -179,6 +187,7 @@ else
             {
                 await SPService.UpdateSanPham(spDuocChon);
             }
+
             await LoadAllData();
             HuyBoSua();
         }
@@ -191,16 +200,13 @@ else
     private async Task XoaSanPham(SanPham sp)
     {
         bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Bạn có chắc muốn xóa sản phẩm '{sp.Ten_San_Pham}' không?");
-
         if (confirmed)
         {
             try
             {
-                // === SỬA === (Truyền "Id" để xóa)
                 await SPService.DeleteSanPham(sp.Id);
                 await LoadAllData();
 
-                // === SỬA === (So sánh "Id")
                 if (spDuocChon.Id == sp.Id)
                 {
                     HuyBoSua();

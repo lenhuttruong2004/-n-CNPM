@@ -1,5 +1,4 @@
 ﻿@page "/loaisanpham"
-
 @using QuanLyDonViTinh.Models
 @using QuanLyDonViTinh.Services
 @inject LoaiSanPhamService LSPService
@@ -9,29 +8,29 @@
 
 <EditForm Model="@lspDuocChon" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
-
     <InputNumber @bind-Value="lspDuocChon.Id" hidden />
 
     <div class="form-group">
         <label>Mã Loại SP:</label>
         <InputText @bind-Value="lspDuocChon.Ma_LSP" class="form-control" MaxLength="50" />
-        <ValidationMessage For="@(() => lspDuocChon.Ma_LSP)" />
+        <ValidationMessage For="@(() => lspDuocChon.Ma_LSP)" style="color:red;" />
     </div>
 
     <div class="form-group">
         <label>Tên Loại SP:</label>
         <InputText @bind-Value="lspDuocChon.Ten_LSP" class="form-control" MaxLength="200" />
-        <ValidationMessage For="@(() => lspDuocChon.Ten_LSP)" />
+        <ValidationMessage For="@(() => lspDuocChon.Ten_LSP)" style="color:red;" />
     </div>
 
     <div class="form-group">
         <label>Ghi chú:</label>
         <InputText @bind-Value="lspDuocChon.Ghi_Chu" class="form-control" MaxLength="500" />
+        <ValidationMessage For="@(() => lspDuocChon.Ghi_Chu)" style="color:red;" />
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-danger" style="color: red;">@errorMessage</div>
+        <div class="alert alert-danger" style="color:red;">@errorMessage</div>
     }
 
     <button type="submit" class="btn btn-primary">
@@ -70,12 +69,8 @@ else
                     <td>@lsp.Ten_LSP</td>
                     <td>@lsp.Ghi_Chu</td>
                     <td>
-                        <button class="btn btn-sm btn-warning" @onclick="() => ChonDeSua(lsp)">
-                            Sửa
-                        </button>
-                        <button class="btn btn-sm btn-danger" @onclick="() => XoaLoaiSanPham(lsp)">
-                            Xóa
-                        </button>
+                        <button class="btn btn-sm btn-warning" @onclick="() => ChonDeSua(lsp)">Sửa</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => XoaLoaiSanPham(lsp)">Xóa</button>
                     </td>
                 </tr>
             }
@@ -103,7 +98,6 @@ else
     {
         lspDuocChon = new LoaiSanPham
             {
-                // === SỬA === (Dùng "Id" và "Ma_LSP")
                 Id = lsp.Id,
                 Ma_LSP = lsp.Ma_LSP,
                 Ten_LSP = lsp.Ten_LSP,
@@ -122,15 +116,10 @@ else
     {
         try
         {
-            // === SỬA === (Kiểm tra "Id")
             if (lspDuocChon.Id == 0)
-            {
                 await LSPService.AddLoaiSanPham(lspDuocChon);
-            }
             else
-            {
                 await LSPService.UpdateLoaiSanPham(lspDuocChon);
-            }
 
             await LoadDanhSach();
             HuyBoSua();
@@ -143,25 +132,16 @@ else
 
     private async Task XoaLoaiSanPham(LoaiSanPham lsp)
     {
-        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", new object[] { $"Bạn có chắc muốn xóa loại sản phẩm '{lsp.Ten_LSP}' không?" });
-
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Bạn có chắc muốn xóa loại sản phẩm '{lsp.Ten_LSP}' không?");
         if (confirmed)
         {
             try
             {
-                // === SỬA === (Truyền "Id" để xóa)
                 await LSPService.DeleteLoaiSanPham(lsp.Id);
-                await LoadDanhSach(); // (Bạn có thể muốn kiểm tra lại tên hàm này, LoadDanhSach)
+                await LoadDanhSach();
 
-                // Sửa: LoadDanhSach (từ code gốc của bạn bị gõ nhầm)
-                // await LoadDanhSach();
-
-
-                // === SỬA === (So sánh "Id")
                 if (lspDuocChon.Id == lsp.Id)
-                {
                     HuyBoSua();
-                }
             }
             catch (Exception ex)
             {
@@ -169,10 +149,4 @@ else
             }
         }
     }
-
-    // === LƯU Ý ===
-    // Trong hàm XoaLoaiSanPham, tôi thấy bạn gọi "LoadDanhCheck()".
-    // Tôi nghĩ bạn gõ nhầm và đã sửa lại thành "LoadDanhSach()".
-    // Nếu "LoadDanhCheck" là một hàm khác có tồn tại, bạn hãy sửa lại nhé.
-    // (Tôi đã comment lại hàm LoadDanhSach() để bạn tự quyết định)
 }

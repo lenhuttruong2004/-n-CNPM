@@ -10,28 +10,30 @@
 <EditForm Model="@nccDuocChon" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
 
+    <!-- Hidden ID -->
     <InputNumber @bind-Value="nccDuocChon.Id" hidden />
 
     <div class="form-group">
         <label>Mã Nhà Cung Cấp:</label>
-        <InputText @bind-Value="nccDuocChon.Ma_NCC" class="form-control" MaxLength="50" />
-        <ValidationMessage For="@(() => nccDuocChon.Ma_NCC)" />
+        <InputText @bind-Value="nccDuocChon.Ma_NCC" class="form-control" maxlength="50" />
+        <ValidationMessage For="@(() => nccDuocChon.Ma_NCC)" style="color:red;" />
+
     </div>
 
     <div class="form-group">
         <label>Tên Nhà Cung Cấp:</label>
-        <InputText @bind-Value="nccDuocChon.Ten_NCC" class="form-control" MaxLength="200" />
-        <ValidationMessage For="@(() => nccDuocChon.Ten_NCC)" />
+        <InputText @bind-Value="nccDuocChon.Ten_NCC" class="form-control" maxlength="200" />
+        <ValidationMessage For="@(() => nccDuocChon.Ten_NCC)" style="color:red;" />
     </div>
 
     <div class="form-group">
         <label>Ghi chú:</label>
-        <InputText @bind-Value="nccDuocChon.Ghi_Chu" class="form-control" MaxLength="500" />
+        <InputText @bind-Value="nccDuocChon.Ghi_Chu" class="form-control" maxlength="500" />
     </div>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-danger" style="color: red;">@errorMessage</div>
+        <div class="alert alert-danger">@errorMessage</div>
     }
 
     <button type="submit" class="btn btn-primary">
@@ -47,13 +49,14 @@
 <hr />
 
 <h4>Danh sách hiện có</h4>
+
 @if (danhSachNCC == null)
 {
     <p><em>Đang tải dữ liệu...</em></p>
 }
 else
 {
-    <table class="table" border="1" style="border-collapse: collapse; width: 60%;">
+    <table class="table" border="1" style="border-collapse: collapse; width: 70%;">
         <thead>
             <tr>
                 <th>Mã NCC</th>
@@ -62,6 +65,7 @@ else
                 <th>Chức năng</th>
             </tr>
         </thead>
+
         <tbody>
             @foreach (var ncc in danhSachNCC)
             {
@@ -70,12 +74,8 @@ else
                     <td>@ncc.Ten_NCC</td>
                     <td>@ncc.Ghi_Chu</td>
                     <td>
-                        <button class="btn btn-sm btn-warning" @onclick="() => ChonDeSua(ncc)">
-                            Sửa
-                        </button>
-                        <button class="btn btn-sm btn-danger" @onclick="() => XoaNhaCungCap(ncc)">
-                            Xóa
-                        </button>
+                        <button class="btn btn-sm btn-warning" @onclick="() => ChonDeSua(ncc)">Sửa</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => XoaNhaCungCap(ncc)">Xóa</button>
                     </td>
                 </tr>
             }
@@ -84,6 +84,7 @@ else
 }
 
 @code {
+
     private IEnumerable<NhaCungCap> danhSachNCC;
     private NhaCungCap nccDuocChon = new NhaCungCap();
     private string errorMessage;
@@ -101,7 +102,6 @@ else
 
     private void ChonDeSua(NhaCungCap ncc)
     {
-        // === SỬA === (Copy "Id" và "Ma_NCC" (string))
         nccDuocChon = new NhaCungCap
             {
                 Id = ncc.Id,
@@ -109,6 +109,7 @@ else
                 Ten_NCC = ncc.Ten_NCC,
                 Ghi_Chu = ncc.Ghi_Chu
             };
+
         errorMessage = null;
     }
 
@@ -122,15 +123,10 @@ else
     {
         try
         {
-            // === SỬA === (Kiểm tra "Id")
-            if (nccDuocChon.Id == 0) // THÊM MỚI
-            {
+            if (nccDuocChon.Id == 0)
                 await NCCService.AddNhaCungCap(nccDuocChon);
-            }
-            else // CẬP NHẬT (SỬA)
-            {
+            else
                 await NCCService.UpdateNhaCungCap(nccDuocChon);
-            }
 
             await LoadDanhSach();
             HuyBoSua();
@@ -143,21 +139,20 @@ else
 
     private async Task XoaNhaCungCap(NhaCungCap ncc)
     {
-        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", new object[] { $"Bạn có chắc muốn xóa nhà cung cấp '{ncc.Ten_NCC}' không?" });
+        bool confirmed = await JSRuntime.InvokeAsync<bool>(
+            "confirm",
+            $"Bạn có chắc muốn xóa nhà cung cấp '{ncc.Ten_NCC}' không?"
+        );
 
         if (confirmed)
         {
             try
             {
-                // === SỬA === (Truyền "Id" để xóa)
                 await NCCService.DeleteNhaCungCap(ncc.Id);
                 await LoadDanhSach();
 
-                // === SỬA === (So sánh "Id")
                 if (nccDuocChon.Id == ncc.Id)
-                {
                     HuyBoSua();
-                }
             }
             catch (Exception ex)
             {

@@ -19,7 +19,6 @@ namespace QuanLyDonViTinh.Services
 
         public async Task<IEnumerable<DonViTinh>> GetDanhSach()
         {
-            // "SELECT *" sẽ tự động map "Id" trong DB với "Id" trong Model
             string sql = "SELECT * FROM tbl_DM_Don_Vi_Tinh";
             using (var connection = new SqlConnection(_connectionString))
             {
@@ -29,8 +28,6 @@ namespace QuanLyDonViTinh.Services
 
         public async Task<DonViTinh> GetDonViTinhById(int id)
         {
-            // === SỬA ===
-            // Sửa "Ma_Don_Vi_Tinh" thành "Id"
             string sql = "SELECT * FROM tbl_DM_Don_Vi_Tinh WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString))
             {
@@ -38,93 +35,97 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        // === HÀM HỖ TRỢ VALIDATE DỮ LIỆU ===
+        // =============================
+        // HÀM KIỂM TRA TRÙNG TÊN (IGNORE TRIM + LOWERCASE)
+        // =============================
+        private async Task<bool> TenDVT_DaTonTai(string tenDVT, int id = 0)
+        {
+            string sql = @"
+                SELECT COUNT(*) 
+                FROM tbl_DM_Don_Vi_Tinh
+                WHERE LOWER(LTRIM(RTRIM(Ten_Don_Vi_Tinh))) = LOWER(@Ten)
+                AND Id <> @Id";
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                int count = await connection.ExecuteScalarAsync<int>(sql,
+                    new { Ten = tenDVT.Trim().ToLower(), Id = id });
+
+                return count > 0;
+            }
+        }
+
+        // =============================
+        // VALIDATE
+        // =============================
         private void ValidateDonViTinh(DonViTinh donViTinh)
         {
-            // 1. Chuẩn hóa dữ liệu (Trim)
             donViTinh.Ten_Don_Vi_Tinh = donViTinh.Ten_Don_Vi_Tinh?.Trim();
             donViTinh.Ghi_Chu = donViTinh.Ghi_Chu?.Trim();
 
-            // 2. Kiểm tra rỗng sau khi Trim
             if (string.IsNullOrEmpty(donViTinh.Ten_Don_Vi_Tinh))
-            {
                 throw new Exception("Tên đơn vị tính không được để trống.");
-            }
 
-            // 3. Kiểm tra độ dài
-            // === SỬA ===
-            // Sửa "50" thành "100" và cập nhật thông báo lỗi
             if (donViTinh.Ten_Don_Vi_Tinh.Length > 100)
-            {
                 throw new Exception("Tên đơn vị tính không được vượt quá 100 ký tự.");
-            }
 
-            // (Bạn có thể thêm kiểm tra độ dài cho Ghi_Chu nếu muốn)
             if (donViTinh.Ghi_Chu?.Length > 500)
-            {
                 throw new Exception("Ghi chú không được vượt quá 500 ký tự.");
-            }
         }
 
-        /* HÀM THÊM MỚI (CREATE) */
+        // =============================
+        // CREATE
+        // =============================
         public async Task AddDonViTinh(DonViTinh donViTinh)
         {
-            ValidateDonViTinh(donViTinh); // Gọi hàm kiểm tra
+            ValidateDonViTinh(donViTinh);
 
-            // Câu lệnh SQL này vẫn đúng vì Dapper sẽ map thuộc tính 
-            // "Ten_Don_Vi_Tinh" và "Ghi_Chu" của đối tượng vào tham số
+            // KIỂM TRA TRÙNG
+            if (await TenDVT_DaTonTai(donViTinh.Ten_Don_Vi_Tinh))
+                throw new Exception("Tên đơn vị tính này đã tồn tại.");
+
             string sql = "INSERT INTO tbl_DM_Don_Vi_Tinh (Ten_Don_Vi_Tinh, Ghi_Chu) VALUES (@Ten_Don_Vi_Tinh, @Ghi_Chu)";
-            try
+            using (var connection = new SqlConnection(_connectionString))
             {
-                using (var connection = new SqlConnection(_connectionString))
-                {
-                    await connection.ExecuteAsync(sql, donViTinh);
-                }
-            }
-            catch (SqlException ex)
-            {
-                if (ex.Number == 2627 || ex.Number == 2601)
-                    throw new Exception("Tên đơn vị tính này đã tồn tại.");
-                else
-                    throw;
+                await connection.ExecuteAsync(sql, donViTinh);
             }
         }
 
-        /* HÀM CẬP NHẬT (UPDATE) */
+        // =============================
+        // UPDATE
+        // =============================
         public async Task UpdateDonViTinh(DonViTinh donViTinh)
         {
-            // === SỬA ===
-            // Sửa "donViTinh.Ma_Don_Vi_Tinh" thành "donViTinh.Id"
-            if (donViTinh.Id <= 0) throw new Exception("ID không hợp lệ.");
-            ValidateDonViTinh(donViTinh); // Gọi hàm kiểm tra
+            if (donViTinh.Id <= 0)
+                throw new Exception("ID không hợp lệ.");
 
-            // === SỬA ===
-            // Sửa "Ma_Don_Vi_Tinh = @Ma_Don_Vi_Tinh" thành "Id = @Id"
-            // Dapper sẽ tự động map "donViTinh.Id" vào tham số "@Id"
-            string sql = "UPDATE tbl_DM_Don_Vi_Tinh SET Ten_Don_Vi_Tinh = @Ten_Don_Vi_Tinh, Ghi_Chu = @Ghi_Chu WHERE Id = @Id";
-            try
+            ValidateDonViTinh(donViTinh);
+
+            // KIỂM TRA TRÙNG (IGNORE current ID)
+            if (await TenDVT_DaTonTai(donViTinh.Ten_Don_Vi_Tinh, donViTinh.Id))
+                throw new Exception("Tên đơn vị tính này đã tồn tại.");
+
+            string sql = @"UPDATE tbl_DM_Don_Vi_Tinh 
+                           SET Ten_Don_Vi_Tinh = @Ten_Don_Vi_Tinh, 
+                               Ghi_Chu = @Ghi_Chu 
+                           WHERE Id = @Id";
+
+            using (var connection = new SqlConnection(_connectionString))
             {
-                using (var connection = new SqlConnection(_connectionString))
-                {
-                    await connection.ExecuteAsync(sql, donViTinh);
-                }
-            }
-            catch (SqlException ex)
-            {
-                if (ex.Number == 2627 || ex.Number == 2601)
-                    throw new Exception("Tên đơn vị tính này đã tồn tại.");
-                else throw;
+                await connection.ExecuteAsync(sql, donViTinh);
             }
         }
 
-        /* HÀM XÓA (DELETE) */
+        // =============================
+        // DELETE
+        // =============================
         public async Task DeleteDonViTinh(int id)
         {
-            if (id <= 0) throw new Exception("ID không hợp lệ.");
+            if (id <= 0)
+                throw new Exception("ID không hợp lệ.");
 
-            // === SỬA ===
-            // Sửa "Ma_Don_Vi_Tinh" thành "Id"
             string sql = "DELETE FROM tbl_DM_Don_Vi_Tinh WHERE Id = @Id";
+
             using (var connection = new SqlConnection(_connectionString))
             {
                 try

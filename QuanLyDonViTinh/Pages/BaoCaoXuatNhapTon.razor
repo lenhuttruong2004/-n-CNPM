@@ -22,13 +22,21 @@
     </div>
 </div>
 
+@* === HIỂN THỊ LỖI NẾU CÓ === *@
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">
+        <strong>Lỗi xảy ra:</strong> @errorMessage
+    </div>
+}
+
 @if (isLoading)
 {
     <p><em>Đang tải dữ liệu...</em></p>
 }
 else if (reportData == null)
 {
-    <p><em>Chưa có dữ liệu. Vui lòng chọn ngày và nhấn "Xem Báo cáo".</em></p>
+    <p><em>Vui lòng chọn ngày và nhấn "Xem Báo cáo".</em></p>
 }
 else if (!reportData.Any())
 {
@@ -69,17 +77,21 @@ else
 
     private IEnumerable<BaoCaoXuatNhapTonViewModel> reportData;
     private bool isLoading = false;
+    private string errorMessage = "";
 
     private async Task LoadDataReport()
     {
         isLoading = true;
         reportData = null;
+        errorMessage = "";
+
         try
         {
             reportData = await ReportService.GetBaoCaoXuatNhapTon(tuNgay, denNgay);
         }
         catch (Exception ex)
         {
+            errorMessage = ex.Message;
             Console.WriteLine($"Lỗi tải báo cáo XNT: {ex.Message}");
         }
         finally
