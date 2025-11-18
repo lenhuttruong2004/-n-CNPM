@@ -13,5 +13,7 @@ namespace QuanLyDonViTinh.Models // Đảm bảo đúng Namespace
         public string CuaHang { get; set; } = "Khách lẻ"; // Dữ liệu giả
         public string TongSoLuongVietSo { get; set; }
         public string TongSoLuongVietChu { get; set; }
+        public decimal TongTienSo { get; set; }      // Tổng tiền bằng số
+        public string TongTienVietChu { get; set; }  // Tổng tiền bằng chữ
     }
 }

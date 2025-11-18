@@ -18,82 +18,80 @@ namespace QuanLyDonViTinh.Services
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        /* HÀM LẤY DANH SÁCH PHIẾU (Đã sửa JOIN và PK) */
+        /* 1. LẤY DANH SÁCH (Đơn giản hóa: Chỉ lấy từ tbl_DM_Nhap_Kho) */
         public async Task<IEnumerable<NhapKho>> GetDanhSach()
         {
             string sql = @"
-                WITH LatestEdits AS (
-                    SELECT *,
-                           ROW_NUMBER() OVER(PARTITION BY Ma_NK_Goc ORDER BY Ngay_Hieu_Chinh DESC) as rn
-                    FROM tbl_XNK_Nhap_Kho
-                ),
-                EditedData AS (
-                    SELECT 
-                        xnk.Ma_NK_Goc AS Id, 
-                        xnk.So_Phieu_Nhap_Kho, xnk.Ngay_Nhap_Kho, xnk.Ghi_Chu,
-                        k.Ten_Kho, ncc.Ten_NCC,
-                        ISNULL(SUM(nkr.SL_Nhap * nkr.Don_Gia_Nhap), 0) AS Tong_Tien
-                    FROM LatestEdits xnk
-                    LEFT JOIN tbl_DM_Kho k ON xnk.Kho_ID = k.Id
-                    LEFT JOIN tbl_DM_NCC ncc ON xnk.NCC_ID = ncc.Id
-                    LEFT JOIN tbl_DM_Nhap_Kho_Raw_Data nkr ON xnk.Ma_NK_Goc = nkr.Nhap_Kho_ID 
-                    WHERE xnk.rn = 1
-                    GROUP BY 
-                        xnk.Ma_NK_Goc, xnk.So_Phieu_Nhap_Kho, xnk.Ngay_Nhap_Kho, xnk.Ghi_Chu,
-                        k.Ten_Kho, ncc.Ten_NCC
-                ),
-                OriginalData AS (
-                    SELECT 
-                        nk.Id, nk.So_Phieu_Nhap_Kho, nk.Ngay_Nhap_Kho, nk.Ghi_Chu,
-                        k.Ten_Kho, ncc.Ten_NCC,
-                        ISNULL(SUM(nkr.SL_Nhap * nkr.Don_Gia_Nhap), 0) AS Tong_Tien
-                    FROM tbl_DM_Nhap_Kho nk
-                    LEFT JOIN tbl_DM_Kho k ON nk.Kho_ID = k.Id
-                    LEFT JOIN tbl_DM_NCC ncc ON nk.NCC_ID = ncc.Id
-                    LEFT JOIN tbl_DM_Nhap_Kho_Raw_Data nkr ON nk.Id = nkr.Nhap_Kho_ID
-                    WHERE nk.Id NOT IN (SELECT Id FROM EditedData)
-                    GROUP BY 
-                        nk.Id, nk.So_Phieu_Nhap_Kho, nk.Ngay_Nhap_Kho, nk.Ghi_Chu,
-                        k.Ten_Kho, ncc.Ten_NCC
-                )
-                SELECT * FROM EditedData
-                UNION ALL
-                SELECT * FROM OriginalData
-                ORDER BY Id DESC;
-            ";
+                SELECT 
+                    nk.Id, 
+                    nk.So_Phieu_Nhap_Kho, 
+                    nk.Ngay_Nhap_Kho, 
+                    nk.Ghi_Chu,
+                    k.Ten_Kho, 
+                    ncc.Ten_NCC,
+                    ISNULL(SUM(nkr.SL_Nhap * nkr.Don_Gia_Nhap), 0) AS Tong_Tien
+                FROM tbl_DM_Nhap_Kho nk
+                LEFT JOIN tbl_DM_Kho k ON nk.Kho_ID = k.Id
+                LEFT JOIN tbl_DM_NCC ncc ON nk.NCC_ID = ncc.Id
+                LEFT JOIN tbl_DM_Nhap_Kho_Raw_Data nkr ON nk.Id = nkr.Nhap_Kho_ID
+                GROUP BY 
+                    nk.Id, nk.So_Phieu_Nhap_Kho, nk.Ngay_Nhap_Kho, nk.Ghi_Chu,
+                    k.Ten_Kho, ncc.Ten_NCC
+                ORDER BY nk.Id DESC";
+
             using (var connection = new SqlConnection(_connectionString))
             {
                 return await connection.QueryAsync<NhapKho>(sql);
             }
         }
 
-        /* HÀM LẤY 1 PHIẾU THEO ID (Đã sửa PK) */
+        /* 2. LẤY 1 PHIẾU THEO ID (Đơn giản hóa: Bỏ logic tìm trong bảng XNK) */
         public async Task<NhapKho> GetPhieuNhapById(int id)
         {
-            string sqlXNK = @"
-                SELECT TOP 1 
-                    Ma_NK_Goc AS Id, So_Phieu_Nhap_Kho, Kho_ID, NCC_ID, Ngay_Nhap_Kho, Ghi_Chu 
-                FROM tbl_XNK_Nhap_Kho 
-                WHERE Ma_NK_Goc = @Id
-                ORDER BY Ngay_Hieu_Chinh DESC";
+            string sql = @"
+                SELECT Id, So_Phieu_Nhap_Kho, Kho_ID, NCC_ID, Ngay_Nhap_Kho, Ghi_Chu 
+                FROM tbl_DM_Nhap_Kho 
+                WHERE Id = @Id";
 
             using (var connection = new SqlConnection(_connectionString))
             {
-                var editedVersion = await connection.QuerySingleOrDefaultAsync<NhapKho>(sqlXNK, new { Id = id });
-                if (editedVersion != null) { return editedVersion; }
-
-                string sqlDM = @"
-                    SELECT Id, So_Phieu_Nhap_Kho, Kho_ID, NCC_ID, Ngay_Nhap_Kho, Ghi_Chu 
-                    FROM tbl_DM_Nhap_Kho 
-                    WHERE Id = @Id";
-                return await connection.QuerySingleOrDefaultAsync<NhapKho>(sqlDM, new { Id = id });
+                return await connection.QuerySingleOrDefaultAsync<NhapKho>(sql, new { Id = id });
             }
         }
 
-        /* HÀM LẤY CHI TIẾT (Đã sửa JOIN và Model) */
+        /* 3. CẬP NHẬT PHIẾU (Quan trọng: Sửa thành UPDATE trực tiếp thay vì INSERT sang bảng khác) */
+        public async Task UpdatePhieuNhap(NhapKho nhapKho)
+        {
+            string sql = @"
+                UPDATE tbl_DM_Nhap_Kho 
+                SET So_Phieu_Nhap_Kho = @So_Phieu_Nhap_Kho,
+                    Kho_ID = @Kho_ID,
+                    NCC_ID = @NCC_ID,
+                    Ngay_Nhap_Kho = @Ngay_Nhap_Kho,
+                    Ghi_Chu = @Ghi_Chu
+                WHERE Id = @Id"; // Lưu ý: Model NhapKho phải có thuộc tính Id
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                try
+                {
+                    await connection.ExecuteAsync(sql, nhapKho);
+                }
+                catch (SqlException ex)
+                {
+                    if (ex.Number == 2627 || ex.Number == 2601)
+                    {
+                        throw new Exception("Lỗi: Số phiếu nhập này đã tồn tại.");
+                    }
+                    throw;
+                }
+            }
+        }
+
+        /* --- CÁC HÀM KHÁC GIỮ NGUYÊN --- */
+
         public async Task<List<NhapKhoRawData>> GetChiTiet(int nhapKhoId)
         {
-            // Sửa: Thêm sp.Ma_San_Pham và dvt.Ten_Don_Vi_Tinh
             string sql = @"
                 SELECT 
                     nkr.Id, nkr.Nhap_Kho_ID, nkr.San_Pham_ID, nkr.SL_Nhap, nkr.Don_Gia_Nhap,
@@ -103,8 +101,8 @@ namespace QuanLyDonViTinh.Services
                 FROM tbl_DM_Nhap_Kho_Raw_Data nkr
                 LEFT JOIN tbl_DM_San_Pham sp ON nkr.San_Pham_ID = sp.Id
                 LEFT JOIN tbl_DM_Don_Vi_Tinh dvt ON sp.Don_Vi_Tinh_ID = dvt.Id
-                WHERE nkr.Nhap_Kho_ID = @NhapKhoId
-            ";
+                WHERE nkr.Nhap_Kho_ID = @NhapKhoId";
+
             using (var connection = new SqlConnection(_connectionString))
             {
                 var result = await connection.QueryAsync<NhapKhoRawData>(sql, new { NhapKhoId = nhapKhoId });
@@ -112,7 +110,6 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* HÀM THÊM MỚI PHIẾU (Đã đúng) */
         public async Task AddPhieuNhap(NhapKhoFull phieuNhapFull)
         {
             if (phieuNhapFull.Details == null || !phieuNhapFull.Details.Any())
@@ -141,36 +138,11 @@ namespace QuanLyDonViTinh.Services
                         }
                         transaction.Commit();
                     }
-                    catch (SqlException ex)
-                    {
-                        if (ex.Number == 2627 || ex.Number == 2601) { transaction.Rollback(); throw new Exception("Lỗi: Số phiếu nhập này đã tồn tại."); }
-                        transaction.Rollback(); throw;
-                    }
                     catch (Exception) { transaction.Rollback(); throw; }
                 }
             }
         }
 
-        /* HÀM CẬP NHẬT PHIẾU (Đã đúng) */
-        public async Task UpdatePhieuNhap(NhapKho nhapKho)
-        {
-            string sql = @"
-                INSERT INTO tbl_XNK_Nhap_Kho 
-                    (Ma_NK_Goc, So_Phieu_Nhap_Kho, Kho_ID, NCC_ID, Ngay_Nhap_Kho, Ghi_Chu) 
-                VALUES 
-                    (@Id, @So_Phieu_Nhap_Kho, @Kho_ID, @NCC_ID, @Ngay_Nhap_Kho, @Ghi_Chu)";
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                try { await connection.ExecuteAsync(sql, nhapKho); }
-                catch (SqlException ex)
-                {
-                    if (ex.Number == 2627 || ex.Number == 2601) { throw new Exception("Lỗi: Số phiếu nhập (hiệu chỉnh) này đã tồn tại."); }
-                    throw;
-                }
-            }
-        }
-
-        /* HÀM XÓA PHIẾU (Đã đúng) */
         public async Task DeletePhieuNhap(int id)
         {
             string sql = "DELETE FROM tbl_DM_Nhap_Kho WHERE Id = @Id";
@@ -180,7 +152,6 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* HÀM CRUD CHI TIẾT (Đã đúng) */
         public async Task UpdateChiTiet(NhapKhoRawData detail)
         {
             string sql = "UPDATE tbl_DM_Nhap_Kho_Raw_Data SET SL_Nhap = @SL_Nhap, Don_Gia_Nhap = @Don_Gia_Nhap WHERE Id = @ID";
@@ -197,30 +168,24 @@ namespace QuanLyDonViTinh.Services
             using (var connection = new SqlConnection(_connectionString)) { await connection.ExecuteAsync(sql, new { Id = id }); }
         }
 
-        /* HÀM LẤY DỮ LIỆU ĐỂ IN (Đã sửa lại code bị thiếu) */
         public async Task<PhieuNhapViewModel> GetPhieuNhapView(int id)
         {
             var header = await GetPhieuNhapById(id);
             if (header == null) return null;
-
-            // === SỬA === (Hoàn thiện dòng code bị cắt)
             var details = await GetChiTiet(id);
-
             decimal tongTien = details.Sum(d => d.SL_Nhap * d.Don_Gia_Nhap);
-            var viewModel = new PhieuNhapViewModel
+
+            return new PhieuNhapViewModel
             {
                 Header = header,
                 Details = details,
                 TongTienSo = tongTien,
-                TongTienVietChu = "..." // Bạn cần thêm hàm đọc số
+                TongTienVietChu = ""
             };
-            return viewModel;
         }
 
-        /* HÀM LẤY DỮ LIỆU BÁO CÁO (Đã sửa JOIN) */
         public async Task<IEnumerable<BaoCaoChiTietHangNhapViewModel>> GetBaoCaoChiTietHangNhap(DateTime tuNgay, DateTime denNgay)
         {
-            // Sửa: Thêm sp.Ma_San_Pham
             string sql = @"
                 SELECT 
                     nk.Ngay_Nhap_Kho, nk.So_Phieu_Nhap_Kho, ncc.Ten_NCC, 

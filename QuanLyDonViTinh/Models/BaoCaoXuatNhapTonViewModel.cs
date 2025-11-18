@@ -6,7 +6,7 @@
         public string Ma_San_Pham { get; set; }
         public string Ten_San_Pham { get; set; }
 
-        // === SỬA === (Đổi tất cả "int" thành "decimal")
+        // ĐỔI TẤT CẢ SANG DECIMAL
         public decimal SL_Dau_Ky { get; set; }
         public decimal SL_Nhap { get; set; }
         public decimal SL_Xuat { get; set; }
