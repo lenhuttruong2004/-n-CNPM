@@ -147,6 +147,9 @@
           }
         }
       },
+      "Microsoft.EntityFrameworkCore.Tools/10.0.0": {
+        "type": "package"
+      },
       "Microsoft.Identity.Client/4.56.0": {
         "type": "package",
         "dependencies": {
@@ -1004,6 +1007,31 @@
         "runtimes/win-arm64/native/Microsoft.Data.SqlClient.SNI.dll",
         "runtimes/win-x64/native/Microsoft.Data.SqlClient.SNI.dll",
         "runtimes/win-x86/native/Microsoft.Data.SqlClient.SNI.dll"
+      ]
+    },
+    "Microsoft.EntityFrameworkCore.Tools/10.0.0": {
+      "sha512": "Gx6AWCf1CsBHTbvVVWBYBKp6hrwZt0IgBigoBPaybwOBG2EFIfZc7NP2BoR6r56YuuikbPIzCuvQuFYNnX43+A==",
+      "type": "package",
+      "path": "microsoft.entityframeworkcore.tools/10.0.0",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "docs/PACKAGE.md",
+        "microsoft.entityframeworkcore.tools.10.0.0.nupkg.sha512",
+        "microsoft.entityframeworkcore.tools.nuspec",
+        "tools/EntityFrameworkCore.PS2.psd1",
+        "tools/EntityFrameworkCore.PS2.psm1",
+        "tools/EntityFrameworkCore.psd1",
+        "tools/EntityFrameworkCore.psm1",
+        "tools/about_EntityFrameworkCore.help.txt",
+        "tools/init.ps1",
+        "tools/net10.0/any/ef.dll",
+        "tools/net10.0/any/ef.runtimeconfig.json",
+        "tools/net472/any/ef.exe",
+        "tools/net472/win-arm64/ef.exe",
+        "tools/net472/win-x86/ef.exe"
       ]
     },
     "Microsoft.Identity.Client/4.56.0": {
@@ -2249,6 +2277,7 @@
     "net7.0": [
       "Dapper >= 2.1.66",
       "Microsoft.Data.SqlClient >= 5.1.5",
+      "Microsoft.EntityFrameworkCore.Tools >= 10.0.0",
       "System.Text.Json >= 7.0.3"
     ]
   },
@@ -2298,6 +2327,12 @@
           "Microsoft.Data.SqlClient": {
             "target": "Package",
             "version": "[5.1.5, )"
+          },
+          "Microsoft.EntityFrameworkCore.Tools": {
+            "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[10.0.0, )"
           },
           "System.Text.Json": {
             "target": "Package",

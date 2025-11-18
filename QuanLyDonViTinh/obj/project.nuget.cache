@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "N5BFYq7QfEKplmiWVhcHN/ekSGakOBkGzM5ts7kd8YNZJLIEfkZi5RswytJmXXAbX4ynRdKPt7Fd7i/H1kbxdA==",
+  "dgSpecHash": "SFHiKUmdcY4pU8CYFu2iKzdEDV+l3u7oWANMpXUr+Ly5ReApKH0uJVG4QP5W7BHr6JBChTeJ0wg6adOn67dtJQ==",
   "success": true,
   "projectFilePath": "C:\\TT_Tuan_1\\QuanLyDonViTinh\\QuanLyDonViTinh\\QuanLyDonViTinh.csproj",
   "expectedPackageFiles": [
@@ -11,6 +11,7 @@
     "C:\\Users\\Admin\\.nuget\\packages\\microsoft.csharp\\4.5.0\\microsoft.csharp.4.5.0.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\microsoft.data.sqlclient\\5.1.5\\microsoft.data.sqlclient.5.1.5.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\microsoft.data.sqlclient.sni.runtime\\5.1.1\\microsoft.data.sqlclient.sni.runtime.5.1.1.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.entityframeworkcore.tools\\10.0.0\\microsoft.entityframeworkcore.tools.10.0.0.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\microsoft.identity.client\\4.56.0\\microsoft.identity.client.4.56.0.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\microsoft.identity.client.extensions.msal\\4.56.0\\microsoft.identity.client.extensions.msal.4.56.0.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\microsoft.identitymodel.abstractions\\6.35.0\\microsoft.identitymodel.abstractions.6.35.0.nupkg.sha512",
