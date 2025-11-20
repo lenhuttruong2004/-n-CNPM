@@ -18,7 +18,28 @@ namespace QuanLyDonViTinh.Services
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        /* 1. LẤY DANH SÁCH (Đơn giản hóa: Chỉ lấy từ tbl_DM_Nhap_Kho) */
+        // ===================================
+        // HÀM HỖ TRỢ KIỂM TRA TRÙNG SỐ PHIẾU (Case-Insensitive & Trim-Insensitive)
+        // ===================================
+        private async Task<bool> SoPhieu_DaTonTai(string soPhieu, int id = 0)
+        {
+            // Sử dụng UPPER(LTRIM(RTRIM(...))) trong SQL để so sánh với Số phiếu đã được chuẩn hóa.
+            string sql = @"
+                SELECT COUNT(*)
+                FROM tbl_DM_Nhap_Kho
+                WHERE UPPER(LTRIM(RTRIM(So_Phieu_Nhap_Kho))) = @SoPhieu_Cleaned
+                AND Id <> @Id"; // Bỏ qua chính nó khi sửa
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // Chuẩn hóa Số phiếu nhập trước khi truyền vào tham số
+                int count = await connection.ExecuteScalarAsync<int>(sql,
+                    new { SoPhieu_Cleaned = soPhieu.Trim().ToUpper(), Id = id });
+                return count > 0;
+            }
+        }
+
+        /* 1. LẤY DANH SÁCH (READ) - Giữ nguyên */
         public async Task<IEnumerable<NhapKho>> GetDanhSach()
         {
             string sql = @"
@@ -45,7 +66,7 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* 2. LẤY 1 PHIẾU THEO ID (Đơn giản hóa: Bỏ logic tìm trong bảng XNK) */
+        /* 2. LẤY 1 PHIẾU THEO ID (READ) - Giữ nguyên */
         public async Task<NhapKho> GetPhieuNhapById(int id)
         {
             string sql = @"
@@ -59,9 +80,68 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* 3. CẬP NHẬT PHIẾU (Quan trọng: Sửa thành UPDATE trực tiếp thay vì INSERT sang bảng khác) */
+        /* 3. THÊM MỚI PHIẾU (CREATE) - Đã bổ sung kiểm tra trùng */
+        public async Task AddPhieuNhap(NhapKhoFull phieuNhapFull)
+        {
+            if (phieuNhapFull.Details == null || !phieuNhapFull.Details.Any())
+                throw new Exception("Phiếu nhập phải có ít nhất một sản phẩm chi tiết.");
+
+            // Chuẩn hóa Số phiếu nhập (Trim + Upper) để kiểm tra
+            phieuNhapFull.Header.So_Phieu_Nhap_Kho = phieuNhapFull.Header.So_Phieu_Nhap_Kho?.Trim().ToUpper();
+
+            // === KIỂM TRA TRÙNG SỐ PHIẾU TRƯỚC KHI THÊM ===
+            if (await SoPhieu_DaTonTai(phieuNhapFull.Header.So_Phieu_Nhap_Kho))
+            {
+                throw new Exception($"Lỗi: Số phiếu nhập '{phieuNhapFull.Header.So_Phieu_Nhap_Kho}' đã tồn tại.");
+            }
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        string headerSql = @"
+                            INSERT INTO tbl_DM_Nhap_Kho (So_Phieu_Nhap_Kho, Kho_ID, NCC_ID, Ngay_Nhap_Kho, Ghi_Chu) 
+                            VALUES (@So_Phieu_Nhap_Kho, @Kho_ID, @NCC_ID, @Ngay_Nhap_Kho, @Ghi_Chu);
+                            SELECT CAST(SCOPE_IDENTITY() as int);";
+
+                        int newId = await connection.QuerySingleAsync<int>(headerSql, phieuNhapFull.Header, transaction: transaction);
+
+                        string detailSql = @"
+                            INSERT INTO tbl_DM_Nhap_Kho_Raw_Data (Nhap_Kho_ID, San_Pham_ID, SL_Nhap, Don_Gia_Nhap) 
+                            VALUES (@Nhap_Kho_ID, @San_Pham_ID, @SL_Nhap, @Don_Gia_Nhap)";
+                        foreach (var detail in phieuNhapFull.Details)
+                        {
+                            detail.Nhap_Kho_ID = newId;
+                            await connection.ExecuteAsync(detailSql, detail, transaction: transaction);
+                        }
+                        transaction.Commit();
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        if (ex.Number == 2627 || ex.Number == 2601) { throw new Exception("Lỗi: Số phiếu nhập này đã tồn tại (DB check)."); }
+                        throw;
+                    }
+                    catch (Exception) { transaction.Rollback(); throw; }
+                }
+            }
+        }
+
+        /* 4. CẬP NHẬT PHIẾU (UPDATE) - Đã bổ sung kiểm tra trùng */
         public async Task UpdatePhieuNhap(NhapKho nhapKho)
         {
+            // Chuẩn hóa Số phiếu nhập (Trim + Upper) để kiểm tra
+            nhapKho.So_Phieu_Nhap_Kho = nhapKho.So_Phieu_Nhap_Kho?.Trim().ToUpper();
+
+            // === KIỂM TRA TRÙNG SỐ PHIẾU TRƯỚC KHI SỬA (Bỏ qua chính nó) ===
+            if (await SoPhieu_DaTonTai(nhapKho.So_Phieu_Nhap_Kho, nhapKho.Id))
+            {
+                throw new Exception($"Lỗi: Số phiếu nhập '{nhapKho.So_Phieu_Nhap_Kho}' đã tồn tại.");
+            }
+
             string sql = @"
                 UPDATE tbl_DM_Nhap_Kho 
                 SET So_Phieu_Nhap_Kho = @So_Phieu_Nhap_Kho,
@@ -69,7 +149,7 @@ namespace QuanLyDonViTinh.Services
                     NCC_ID = @NCC_ID,
                     Ngay_Nhap_Kho = @Ngay_Nhap_Kho,
                     Ghi_Chu = @Ghi_Chu
-                WHERE Id = @Id"; // Lưu ý: Model NhapKho phải có thuộc tính Id
+                WHERE Id = @Id";
 
             using (var connection = new SqlConnection(_connectionString))
             {
@@ -81,14 +161,14 @@ namespace QuanLyDonViTinh.Services
                 {
                     if (ex.Number == 2627 || ex.Number == 2601)
                     {
-                        throw new Exception("Lỗi: Số phiếu nhập này đã tồn tại.");
+                        throw new Exception("Lỗi: Số phiếu nhập này đã tồn tại (DB check).");
                     }
                     throw;
                 }
             }
         }
 
-        /* --- CÁC HÀM KHÁC GIỮ NGUYÊN --- */
+        /* --- CÁC HÀM CÒN LẠI GIỮ NGUYÊN (READ DETAIL, DELETE) --- */
 
         public async Task<List<NhapKhoRawData>> GetChiTiet(int nhapKhoId)
         {
@@ -107,39 +187,6 @@ namespace QuanLyDonViTinh.Services
             {
                 var result = await connection.QueryAsync<NhapKhoRawData>(sql, new { NhapKhoId = nhapKhoId });
                 return result.ToList();
-            }
-        }
-
-        public async Task AddPhieuNhap(NhapKhoFull phieuNhapFull)
-        {
-            if (phieuNhapFull.Details == null || !phieuNhapFull.Details.Any())
-                throw new Exception("Phiếu nhập phải có ít nhất một sản phẩm chi tiết.");
-
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                using (var transaction = connection.BeginTransaction())
-                {
-                    try
-                    {
-                        string headerSql = @"
-                            INSERT INTO tbl_DM_Nhap_Kho (So_Phieu_Nhap_Kho, Kho_ID, NCC_ID, Ngay_Nhap_Kho, Ghi_Chu) 
-                            VALUES (@So_Phieu_Nhap_Kho, @Kho_ID, @NCC_ID, @Ngay_Nhap_Kho, @Ghi_Chu);
-                            SELECT CAST(SCOPE_IDENTITY() as int);";
-                        int newId = await connection.QuerySingleAsync<int>(headerSql, phieuNhapFull.Header, transaction: transaction);
-
-                        string detailSql = @"
-                            INSERT INTO tbl_DM_Nhap_Kho_Raw_Data (Nhap_Kho_ID, San_Pham_ID, SL_Nhap, Don_Gia_Nhap) 
-                            VALUES (@Nhap_Kho_ID, @San_Pham_ID, @SL_Nhap, @Don_Gia_Nhap)";
-                        foreach (var detail in phieuNhapFull.Details)
-                        {
-                            detail.Nhap_Kho_ID = newId;
-                            await connection.ExecuteAsync(detailSql, detail, transaction: transaction);
-                        }
-                        transaction.Commit();
-                    }
-                    catch (Exception) { transaction.Rollback(); throw; }
-                }
             }
         }
 
@@ -174,6 +221,16 @@ namespace QuanLyDonViTinh.Services
             if (header == null) return null;
             var details = await GetChiTiet(id);
             decimal tongTien = details.Sum(d => d.SL_Nhap * d.Don_Gia_Nhap);
+
+            // Cần thêm logic lấy Ten_Kho, Ten_NCC cho header nếu cần in ấn chi tiết
+            // Hiện tại ViewModel chỉ gán ID. Nếu bạn cần, có thể bổ sung như sau:
+            /*
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                header.Ten_Kho = await connection.QueryFirstOrDefaultAsync<string>("SELECT Ten_Kho FROM tbl_DM_Kho WHERE Id = @KhoID", new { KhoID = header.Kho_ID });
+                header.Ten_NCC = await connection.QueryFirstOrDefaultAsync<string>("SELECT Ten_NCC FROM tbl_DM_NCC WHERE Id = @NCCID", new { NCCID = header.NCC_ID });
+            }
+            */
 
             return new PhieuNhapViewModel
             {

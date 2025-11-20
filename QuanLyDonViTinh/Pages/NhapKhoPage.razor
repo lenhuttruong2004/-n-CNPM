@@ -21,7 +21,7 @@
                 <div class="col-md-3 form-group">
                     <label>Số Phiếu:</label>
                     <InputText @bind-Value="currentPhieu.Header.So_Phieu_Nhap_Kho" class="form-control" />
-                    <ValidationMessage For="@(() => currentPhieu.Header.So_Phieu_Nhap_Kho)" />
+                    <ValidationMessage For="@(() => currentPhieu.Header.So_Phieu_Nhap_Kho)" style="color:red;" />
                 </div>
                 <div class="col-md-3 form-group">
                     <label>Kho Nhập:</label>
@@ -33,7 +33,7 @@
                                 <option value="@kho.Id">@kho.Ten_Kho</option>
                             } }
                     </InputSelect>
-                    <ValidationMessage For="@(() => currentPhieu.Header.Kho_ID)" />
+                    <ValidationMessage For="@(() => currentPhieu.Header.Kho_ID)" style="color:red; " />
                 </div>
                 <div class="col-md-3 form-group">
                     <label>Nhà Cung Cấp:</label>
@@ -45,12 +45,12 @@
                                 <option value="@ncc.Id">@ncc.Ten_NCC</option>
                             } }
                     </InputSelect>
-                    <ValidationMessage For="@(() => currentPhieu.Header.NCC_ID)" />
+                    <ValidationMessage For="@(() => currentPhieu.Header.NCC_ID)" style="color:red;"/>
                 </div>
                 <div class="col-md-3 form-group">
                     <label>Ngày Nhập:</label>
                     <InputDate @bind-Value="currentPhieu.Header.Ngay_Nhap_Kho" class="form-control" />
-                    <ValidationMessage For="@(() => currentPhieu.Header.Ngay_Nhap_Kho)" />
+                    <ValidationMessage For="@(() => currentPhieu.Header.Ngay_Nhap_Kho)" style="color:red;"/>
                 </div>
                 <div class="col-md-12 form-group">
                     <label>Ghi Chú:</label>

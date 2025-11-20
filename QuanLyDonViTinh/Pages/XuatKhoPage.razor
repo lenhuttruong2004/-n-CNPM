@@ -20,7 +20,7 @@
                 <div class="col-md-3 form-group">
                     <label>Số Phiếu:</label>
                     <InputText @bind-Value="currentPhieu.Header.So_Phieu_Xuat_Kho" class="form-control" />
-                    <ValidationMessage For="@(() => currentPhieu.Header.So_Phieu_Xuat_Kho)" />
+                    <ValidationMessage For="@(() => currentPhieu.Header.So_Phieu_Xuat_Kho)"style="color:red;" />
                 </div>
                 <div class="col-md-3 form-group">
                     <label>Kho Xuất:</label>
@@ -33,7 +33,7 @@
                             }
                         }
                     </InputSelect>
-                    <ValidationMessage For="@(() => currentPhieu.Header.Kho_ID)" />
+                    <ValidationMessage For="@(() => currentPhieu.Header.Kho_ID)" style="color:red;"/>
                 </div>
                 <div class="col-md-3 form-group">
                     <label>Ngày Xuất:</label>
