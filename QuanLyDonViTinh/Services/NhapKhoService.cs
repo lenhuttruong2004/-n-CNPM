@@ -23,23 +23,21 @@ namespace QuanLyDonViTinh.Services
         // ===================================
         private async Task<bool> SoPhieu_DaTonTai(string soPhieu, int id = 0)
         {
-            // Sử dụng UPPER(LTRIM(RTRIM(...))) trong SQL để so sánh với Số phiếu đã được chuẩn hóa.
             string sql = @"
                 SELECT COUNT(*)
                 FROM tbl_DM_Nhap_Kho
                 WHERE UPPER(LTRIM(RTRIM(So_Phieu_Nhap_Kho))) = @SoPhieu_Cleaned
-                AND Id <> @Id"; // Bỏ qua chính nó khi sửa
+                AND Id <> @Id";
 
             using (var connection = new SqlConnection(_connectionString))
             {
-                // Chuẩn hóa Số phiếu nhập trước khi truyền vào tham số
                 int count = await connection.ExecuteScalarAsync<int>(sql,
                     new { SoPhieu_Cleaned = soPhieu.Trim().ToUpper(), Id = id });
                 return count > 0;
             }
         }
 
-        /* 1. LẤY DANH SÁCH (READ) - Giữ nguyên */
+        /* 1. LẤY DANH SÁCH (READ) */
         public async Task<IEnumerable<NhapKho>> GetDanhSach()
         {
             string sql = @"
@@ -66,7 +64,7 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* 2. LẤY 1 PHIẾU THEO ID (READ) - Giữ nguyên */
+        /* 2. LẤY 1 PHIẾU THEO ID (READ) */
         public async Task<NhapKho> GetPhieuNhapById(int id)
         {
             string sql = @"
@@ -80,16 +78,14 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* 3. THÊM MỚI PHIẾU (CREATE) - Đã bổ sung kiểm tra trùng */
+        /* 3. THÊM MỚI PHIẾU (CREATE) - Đã sửa lỗi FK Violation */
         public async Task AddPhieuNhap(NhapKhoFull phieuNhapFull)
         {
             if (phieuNhapFull.Details == null || !phieuNhapFull.Details.Any())
                 throw new Exception("Phiếu nhập phải có ít nhất một sản phẩm chi tiết.");
 
-            // Chuẩn hóa Số phiếu nhập (Trim + Upper) để kiểm tra
             phieuNhapFull.Header.So_Phieu_Nhap_Kho = phieuNhapFull.Header.So_Phieu_Nhap_Kho?.Trim().ToUpper();
 
-            // === KIỂM TRA TRÙNG SỐ PHIẾU TRƯỚC KHI THÊM ===
             if (await SoPhieu_DaTonTai(phieuNhapFull.Header.So_Phieu_Nhap_Kho))
             {
                 throw new Exception($"Lỗi: Số phiếu nhập '{phieuNhapFull.Header.So_Phieu_Nhap_Kho}' đã tồn tại.");
@@ -122,7 +118,23 @@ namespace QuanLyDonViTinh.Services
                     catch (SqlException ex)
                     {
                         transaction.Rollback();
-                        if (ex.Number == 2627 || ex.Number == 2601) { throw new Exception("Lỗi: Số phiếu nhập này đã tồn tại (DB check)."); }
+                        // Lỗi trùng lặp khóa chính hoặc unique index
+                        if (ex.Number == 2627 || ex.Number == 2601)
+                        {
+                            throw new Exception("Lỗi: Số phiếu nhập này đã tồn tại (DB check).");
+                        }
+                        // Lỗi vi phạm khóa ngoại (Foreign Key) - 547
+                        else if (ex.Number == 547)
+                        {
+                            if (ex.Message.Contains("FK_tbl_DM_Nhap_Kho_tbl_DM_Kho"))
+                                throw new Exception("Kho hàng bạn chọn không còn tồn tại (đã bị xóa). Vui lòng tải lại trang.");
+                            if (ex.Message.Contains("FK_tbl_DM_Nhap_Kho_tbl_DM_NCC"))
+                                throw new Exception("Nhà cung cấp bạn chọn không còn tồn tại. Vui lòng tải lại trang.");
+                            if (ex.Message.Contains("FK_tbl_DM_Nhap_Kho_Raw_Data_tbl_DM_San_Pham"))
+                                throw new Exception("Có sản phẩm trong danh sách không còn tồn tại (đã bị xóa).");
+
+                            throw new Exception("Lỗi dữ liệu tham chiếu không tồn tại (Kho, NCC hoặc Sản phẩm).");
+                        }
                         throw;
                     }
                     catch (Exception) { transaction.Rollback(); throw; }
@@ -130,13 +142,11 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* 4. CẬP NHẬT PHIẾU (UPDATE) - Đã bổ sung kiểm tra trùng */
+        /* 4. CẬP NHẬT PHIẾU (UPDATE) - Đã sửa lỗi FK Violation */
         public async Task UpdatePhieuNhap(NhapKho nhapKho)
         {
-            // Chuẩn hóa Số phiếu nhập (Trim + Upper) để kiểm tra
             nhapKho.So_Phieu_Nhap_Kho = nhapKho.So_Phieu_Nhap_Kho?.Trim().ToUpper();
 
-            // === KIỂM TRA TRÙNG SỐ PHIẾU TRƯỚC KHI SỬA (Bỏ qua chính nó) ===
             if (await SoPhieu_DaTonTai(nhapKho.So_Phieu_Nhap_Kho, nhapKho.Id))
             {
                 throw new Exception($"Lỗi: Số phiếu nhập '{nhapKho.So_Phieu_Nhap_Kho}' đã tồn tại.");
@@ -163,13 +173,21 @@ namespace QuanLyDonViTinh.Services
                     {
                         throw new Exception("Lỗi: Số phiếu nhập này đã tồn tại (DB check).");
                     }
+                    else if (ex.Number == 547)
+                    {
+                        if (ex.Message.Contains("FK_tbl_DM_Nhap_Kho_tbl_DM_Kho"))
+                            throw new Exception("Kho hàng bạn chọn không còn tồn tại.");
+                        if (ex.Message.Contains("FK_tbl_DM_Nhap_Kho_tbl_DM_NCC"))
+                            throw new Exception("Nhà cung cấp bạn chọn không còn tồn tại.");
+
+                        throw new Exception("Lỗi dữ liệu tham chiếu không tồn tại.");
+                    }
                     throw;
                 }
             }
         }
 
-        /* --- CÁC HÀM CÒN LẠI GIỮ NGUYÊN (READ DETAIL, DELETE) --- */
-
+        /* 5. LẤY CHI TIẾT (READ) */
         public async Task<List<NhapKhoRawData>> GetChiTiet(int nhapKhoId)
         {
             string sql = @"
@@ -190,47 +208,70 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
+        /* 6. XÓA PHIẾU (DELETE) */
         public async Task DeletePhieuNhap(int id)
         {
             string sql = "DELETE FROM tbl_DM_Nhap_Kho WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString))
             {
+                // Thêm try-catch nếu cần kiểm tra ràng buộc khi xóa (VD: đã xuất kho thì không được xóa nhập)
+                // Hiện tại bảng Nhap_Kho là bảng cha của Nhap_Kho_Raw_Data, cần cấu hình ON DELETE CASCADE ở DB 
+                // hoặc xóa chi tiết trước. Ở đây giả định DB đã xử lý hoặc logic xóa được phép.
                 await connection.ExecuteAsync(sql, new { Id = id });
             }
         }
 
+        /* 7. CÁC HÀM CRUD CHI TIẾT - Đã sửa lỗi FK Violation cho Sản phẩm */
         public async Task UpdateChiTiet(NhapKhoRawData detail)
         {
             string sql = "UPDATE tbl_DM_Nhap_Kho_Raw_Data SET SL_Nhap = @SL_Nhap, Don_Gia_Nhap = @Don_Gia_Nhap WHERE Id = @ID";
-            using (var connection = new SqlConnection(_connectionString)) { await connection.ExecuteAsync(sql, detail); }
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                try
+                {
+                    await connection.ExecuteAsync(sql, detail);
+                }
+                catch (SqlException ex)
+                {
+                    // Update thì ít khi lỗi FK trừ khi đổi San_Pham_ID (thường không đổi ở giao diện list)
+                    // Nhưng cứ thêm cho an toàn
+                    if (ex.Number == 547) throw new Exception("Sản phẩm không tồn tại.");
+                    throw;
+                }
+            }
         }
+
         public async Task AddChiTiet(NhapKhoRawData detail)
         {
             string sql = "INSERT INTO tbl_DM_Nhap_Kho_Raw_Data (Nhap_Kho_ID, San_Pham_ID, SL_Nhap, Don_Gia_Nhap) VALUES (@Nhap_Kho_ID, @San_Pham_ID, @SL_Nhap, @Don_Gia_Nhap)";
-            using (var connection = new SqlConnection(_connectionString)) { await connection.ExecuteAsync(sql, detail); }
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                try
+                {
+                    await connection.ExecuteAsync(sql, detail);
+                }
+                catch (SqlException ex)
+                {
+                    if (ex.Number == 547)
+                        throw new Exception("Sản phẩm bạn chọn thêm vào chi tiết không còn tồn tại (đã bị xóa).");
+                    throw;
+                }
+            }
         }
+
         public async Task DeleteChiTiet(int id)
         {
             string sql = "DELETE FROM tbl_DM_Nhap_Kho_Raw_Data WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString)) { await connection.ExecuteAsync(sql, new { Id = id }); }
         }
 
+        /* 8. CÁC HÀM VIEW MODEL & REPORT (Giữ nguyên) */
         public async Task<PhieuNhapViewModel> GetPhieuNhapView(int id)
         {
             var header = await GetPhieuNhapById(id);
             if (header == null) return null;
             var details = await GetChiTiet(id);
             decimal tongTien = details.Sum(d => d.SL_Nhap * d.Don_Gia_Nhap);
-
-            // Cần thêm logic lấy Ten_Kho, Ten_NCC cho header nếu cần in ấn chi tiết
-            // Hiện tại ViewModel chỉ gán ID. Nếu bạn cần, có thể bổ sung như sau:
-            /*
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                header.Ten_Kho = await connection.QueryFirstOrDefaultAsync<string>("SELECT Ten_Kho FROM tbl_DM_Kho WHERE Id = @KhoID", new { KhoID = header.Kho_ID });
-                header.Ten_NCC = await connection.QueryFirstOrDefaultAsync<string>("SELECT Ten_NCC FROM tbl_DM_NCC WHERE Id = @NCCID", new { NCCID = header.NCC_ID });
-            }
-            */
 
             return new PhieuNhapViewModel
             {

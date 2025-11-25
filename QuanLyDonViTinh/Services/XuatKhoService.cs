@@ -38,7 +38,7 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* 1. LẤY DANH SÁCH PHIẾU (ĐÃ FIX - CHỈ QUERY BẢNG GỐC) */
+        /* 1. LẤY DANH SÁCH PHIẾU */
         public async Task<IEnumerable<XuatKho>> GetDanhSach()
         {
             string sql = @"
@@ -62,7 +62,7 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* 2. LẤY 1 PHIẾU THEO ID (ĐÃ FIX - CHỈ QUERY BẢNG GỐC) */
+        /* 2. LẤY 1 PHIẾU THEO ID */
         public async Task<XuatKho> GetPhieuXuatById(int id)
         {
             string sql = @"
@@ -76,7 +76,7 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* 3. LẤY CHI TIẾT - Giữ nguyên */
+        /* 3. LẤY CHI TIẾT */
         public async Task<List<XuatKhoRawData>> GetChiTiet(int id)
         {
             string sql = @"
@@ -97,7 +97,7 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* 4. THÊM MỚI PHIẾU - Đã bổ sung kiểm tra trùng */
+        /* 4. THÊM MỚI PHIẾU - Đã xử lý lỗi FK 547 */
         public async Task AddPhieuXuat(XuatKhoFull phieuXuatFull)
         {
             if (phieuXuatFull.Details == null || !phieuXuatFull.Details.Any())
@@ -137,15 +137,31 @@ namespace QuanLyDonViTinh.Services
                     }
                     catch (SqlException ex)
                     {
-                        if (ex.Number == 2627 || ex.Number == 2601) { transaction.Rollback(); throw new Exception("Lỗi: Số phiếu xuất này đã tồn tại."); }
-                        transaction.Rollback(); throw;
+                        transaction.Rollback();
+                        // Lỗi Duplicate Key
+                        if (ex.Number == 2627 || ex.Number == 2601)
+                        {
+                            throw new Exception("Lỗi: Số phiếu xuất này đã tồn tại.");
+                        }
+                        // Lỗi Foreign Key (547)
+                        else if (ex.Number == 547)
+                        {
+                            if (ex.Message.Contains("FK_tbl_DM_Xuat_Kho_tbl_DM_Kho"))
+                                throw new Exception("Kho hàng bạn chọn không còn tồn tại (đã bị xóa). Vui lòng chọn lại.");
+                            if (ex.Message.Contains("FK_tbl_DM_Xuat_Kho_Raw_Data_tbl_DM_San_Pham"))
+                                throw new Exception("Có sản phẩm trong phiếu không còn tồn tại (đã bị xóa).");
+
+                            throw new Exception("Lỗi dữ liệu tham chiếu (Kho hoặc Sản phẩm) không tồn tại.");
+                        }
+
+                        throw;
                     }
                     catch (Exception) { transaction.Rollback(); throw; }
                 }
             }
         }
 
-        /* 5. CẬP NHẬT PHIẾU (ĐÃ FIX - UPDATE TRỰC TIẾP) */
+        /* 5. CẬP NHẬT PHIẾU - Đã xử lý lỗi FK 547 */
         public async Task UpdatePhieuXuat(XuatKho xuatKho)
         {
             // Chuẩn hóa Số phiếu xuất
@@ -157,7 +173,6 @@ namespace QuanLyDonViTinh.Services
                 throw new Exception($"Lỗi: Số phiếu xuất '{xuatKho.So_Phieu_Xuat_Kho}' đã tồn tại.");
             }
 
-            // Chuyển sang UPDATE trực tiếp trên bảng gốc tbl_DM_Xuat_Kho
             string sql = @"
                 UPDATE tbl_DM_Xuat_Kho 
                 SET So_Phieu_Xuat_Kho = @So_Phieu_Xuat_Kho,
@@ -168,16 +183,29 @@ namespace QuanLyDonViTinh.Services
 
             using (var connection = new SqlConnection(_connectionString))
             {
-                try { await connection.ExecuteAsync(sql, xuatKho); }
+                try
+                {
+                    await connection.ExecuteAsync(sql, xuatKho);
+                }
                 catch (SqlException ex)
                 {
-                    if (ex.Number == 2627 || ex.Number == 2601) { throw new Exception("Lỗi: Số phiếu xuất này đã tồn tại (DB check)."); }
+                    if (ex.Number == 2627 || ex.Number == 2601)
+                    {
+                        throw new Exception("Lỗi: Số phiếu xuất này đã tồn tại (DB check).");
+                    }
+                    else if (ex.Number == 547)
+                    {
+                        if (ex.Message.Contains("FK_tbl_DM_Xuat_Kho_tbl_DM_Kho"))
+                            throw new Exception("Kho hàng bạn chọn không còn tồn tại.");
+
+                        throw new Exception("Lỗi dữ liệu tham chiếu không tồn tại.");
+                    }
                     throw;
                 }
             }
         }
 
-        /* 6. XÓA PHIẾU - Giữ nguyên */
+        /* 6. XÓA PHIẾU */
         public async Task DeletePhieuXuat(int id)
         {
             string sql = "DELETE FROM tbl_DM_Xuat_Kho WHERE Id = @Id";
@@ -187,24 +215,49 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* 7. CRUD CHI TIẾT - Đã sửa lỗi tham số @ID */
+        /* 7. CRUD CHI TIẾT - Đã xử lý lỗi FK 547 cho Sản phẩm */
         public async Task UpdateChiTiet(XuatKhoRawData detail)
         {
             string sql = "UPDATE tbl_DM_Xuat_Kho_Raw_Data SET SL_Xuat = @SL_Xuat, Don_Gia_Xuat = @Don_Gia_Xuat WHERE Id = @Id";
-            using (var connection = new SqlConnection(_connectionString)) { await connection.ExecuteAsync(sql, detail); }
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                try
+                {
+                    await connection.ExecuteAsync(sql, detail);
+                }
+                catch (SqlException ex)
+                {
+                    if (ex.Number == 547) throw new Exception("Sản phẩm không tồn tại.");
+                    throw;
+                }
+            }
         }
+
         public async Task AddChiTiet(XuatKhoRawData detail)
         {
             string sql = "INSERT INTO tbl_DM_Xuat_Kho_Raw_Data (Xuat_Kho_ID, San_Pham_ID, SL_Xuat, Don_Gia_Xuat) VALUES (@Xuat_Kho_ID, @San_Pham_ID, @SL_Xuat, @Don_Gia_Xuat)";
-            using (var connection = new SqlConnection(_connectionString)) { await connection.ExecuteAsync(sql, detail); }
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                try
+                {
+                    await connection.ExecuteAsync(sql, detail);
+                }
+                catch (SqlException ex)
+                {
+                    if (ex.Number == 547)
+                        throw new Exception("Sản phẩm bạn chọn thêm vào chi tiết không còn tồn tại (đã bị xóa).");
+                    throw;
+                }
+            }
         }
+
         public async Task DeleteChiTiet(int id)
         {
             string sql = "DELETE FROM tbl_DM_Xuat_Kho_Raw_Data WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString)) { await connection.ExecuteAsync(sql, new { Id = id }); }
         }
 
-        /* 8. LẤY DỮ LIỆU ĐỂ IN - Giữ nguyên */
+        /* 8. LẤY DỮ LIỆU ĐỂ IN */
         public async Task<PhieuXuatViewModel> GetPhieuXuatView(int id)
         {
             var header = await GetPhieuXuatById(id);
@@ -214,14 +267,13 @@ namespace QuanLyDonViTinh.Services
             {
                 Header = header,
                 Details = details,
-                // TongTienSo và TongTienVietChu cần được bổ sung vào ViewModel nếu muốn dùng
                 TongSoLuongVietSo = details.Sum(d => d.SL_Xuat).ToString("N2"),
                 TongSoLuongVietChu = "..."
             };
             return viewModel;
         }
 
-        /* 9. BÁO CÁO CHI TIẾT HÀNG XUẤT - Giữ nguyên */
+        /* 9. BÁO CÁO CHI TIẾT HÀNG XUẤT */
         public async Task<IEnumerable<BaoCaoChiTietHangXuatViewModel>> GetBaoCaoChiTietHangXuat(DateTime tuNgay, DateTime denNgay)
         {
             string sql = @"
@@ -241,4 +293,4 @@ namespace QuanLyDonViTinh.Services
             }
         }
     }
-}
+}XmlConfigurationExtensions

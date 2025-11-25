@@ -69,23 +69,44 @@ namespace QuanLyDonViTinh.Services
             if (sanPham == null) throw new ArgumentNullException(nameof(sanPham));
             StandardizeInput(sanPham);
 
-            // Sửa: INSERT vào "Ma_San_Pham" (không phải "Ma_SP")
             string sql = @"INSERT INTO tbl_DM_San_Pham (Ma_San_Pham, Ten_San_Pham, Loai_San_Pham_ID, Don_Vi_Tinh_ID, Ghi_Chu) 
-                           VALUES (@Ma_San_Pham, @Ten_San_Pham, @Loai_San_Pham_ID, @Don_Vi_Tinh_ID, @Ghi_Chu)";
+                   VALUES (@Ma_San_Pham, @Ten_San_Pham, @Loai_San_Pham_ID, @Don_Vi_Tinh_ID, @Ghi_Chu)";
             try
             {
                 using (var connection = new SqlConnection(_connectionString))
                 {
-                    // Dapper sẽ tự map các thuộc tính: @Ma_San_Pham, @Ten_San_Pham... từ object
                     await connection.ExecuteAsync(sql, sanPham);
                 }
             }
             catch (SqlException ex)
             {
+                // Lỗi trùng Mã sản phẩm (Duplicate Key)
                 if (ex.Number == 2627 || ex.Number == 2601)
-                    // Sửa: Lấy đúng tên thuộc tính
+                {
                     throw new Exception($"Mã sản phẩm '{sanPham.Ma_San_Pham}' đã tồn tại.");
-                else throw;
+                }
+                // === BỔ SUNG: Bắt lỗi Khóa ngoại (Foreign Key - 547) ===
+                else if (ex.Number == 547)
+                {
+                    // Kiểm tra thông báo lỗi để biết chính xác là do Đơn vị tính
+                    if (ex.Message.Contains("FK_tbl_DM_San_Pham_tbl_DM_Don_Vi_Tinh"))
+                    {
+                        throw new Exception("Đơn vị tính bạn chọn không còn tồn tại . Vui lòng tải lại trang!");
+                    }
+                    // Phòng hờ lỗi do Loại sản phẩm bị xóa
+                    else if (ex.Message.Contains("FK_tbl_DM_San_Pham_tbl_DM_Loai_San_Pham"))
+                    {
+                        throw new Exception("Loại sản phẩm bạn chọn không còn tồn tại. Vui lòng tải lại trang!");
+                    }
+                    else
+                    {
+                        throw new Exception("Dữ liệu liên quan không tồn tại. Chi tiết: " + ex.Message);
+                    }
+                }
+                else
+                {
+                    throw; // Các lỗi khác ném ra bình thường
+                }
             }
         }
 
