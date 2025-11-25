@@ -28,10 +28,12 @@
                     <InputSelect @bind-Value="currentPhieu.Header.Kho_ID" class="form-control">
                         <option value="0">-- Chọn Kho --</option>
                         @if (danhSachKho != null)
-                        { @foreach (var kho in danhSachKho)
+                        {
+                            @foreach (var kho in danhSachKho)
                             {
                                 <option value="@kho.Id">@kho.Ten_Kho</option>
-                            } }
+                            }
+                        }
                     </InputSelect>
                     <ValidationMessage For="@(() => currentPhieu.Header.Kho_ID)" style="color:red; " />
                 </div>
@@ -40,17 +42,19 @@
                     <InputSelect @bind-Value="currentPhieu.Header.NCC_ID" class="form-control">
                         <option value="0">-- Chọn NCC --</option>
                         @if (danhSachNCC != null)
-                        { @foreach (var ncc in danhSachNCC)
+                        {
+                            @foreach (var ncc in danhSachNCC)
                             {
                                 <option value="@ncc.Id">@ncc.Ten_NCC</option>
-                            } }
+                            }
+                        }
                     </InputSelect>
-                    <ValidationMessage For="@(() => currentPhieu.Header.NCC_ID)" style="color:red;"/>
+                    <ValidationMessage For="@(() => currentPhieu.Header.NCC_ID)" style="color:red;" />
                 </div>
                 <div class="col-md-3 form-group">
                     <label>Ngày Nhập:</label>
                     <InputDate @bind-Value="currentPhieu.Header.Ngay_Nhap_Kho" class="form-control" />
-                    <ValidationMessage For="@(() => currentPhieu.Header.Ngay_Nhap_Kho)" style="color:red;"/>
+                    <ValidationMessage For="@(() => currentPhieu.Header.Ngay_Nhap_Kho)" style="color:red;" />
                 </div>
                 <div class="col-md-12 form-group">
                     <label>Ghi Chú:</label>
@@ -65,38 +69,88 @@
                 <h5>Chi tiết Sản Phẩm</h5>
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered">
-                        @foreach (var detail in currentPhieu.Details)
-                        {
+                        <thead class="thead-light">
                             <tr>
-                                <td>@detail.Ten_San_Pham</td>
-                                <td>@detail.SL_Nhap.ToString("N0")</td>
-                                <td>@detail.Don_Gia_Nhap.ToString("N0")</td>
-                                <td>@((detail.SL_Nhap * detail.Don_Gia_Nhap).ToString("N0"))</td>
+                                <th style="width: 40%">Tên Hàng</th>
+                                <th style="width: 15%" class="text-right">SL</th>
+                                <th style="width: 20%" class="text-right">Đơn giá</th>
+                                <th style="width: 15%" class="text-right">Thành tiền</th>
+                                <th style="width: 10%"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detail in currentPhieu.Details)
+                            {
+                                <tr>
+                                    <td>@detail.Ten_San_Pham</td>
+                                    <td class="text-right">@detail.SL_Nhap.ToString("N0")</td>
+                                    <td class="text-right">@detail.Don_Gia_Nhap.ToString("N0")</td>
+                                    <td class="text-right">@((detail.SL_Nhap * detail.Don_Gia_Nhap).ToString("N0"))</td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-danger" @onclick="() => RemoveDetail(detail)">Xóa</button>
+                                    </td>
+                                </tr>
+                            }
+                            <tr>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-danger" @onclick="() => RemoveDetail(detail)">Xóa</button>
+                                    <InputSelect @bind-Value="newDetail.San_Pham_ID" class="form-control form-control-sm" @onchange="@(e => UpdateNewDetailName(e))">
+                                        <option value="0">-- Chọn Sản Phẩm --</option>
+                                        @if (danhSachSP != null)
+                                        {
+                                            @foreach (var sp in danhSachSP)
+                                            {
+                                                <option value="@sp.Id">@sp.Ten_San_Pham</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    @if (showDetailError)
+                                    {
+                                        <span style="color: red; font-size: 0.8em;">@detailErrorMessage</span>
+                                    }
+                                </td>
+                                <td><InputNumber @bind-Value="newDetail.SL_Nhap" class="form-control form-control-sm text-right" placeholder="SL" /></td>
+                                <td><InputNumber @bind-Value="newDetail.Don_Gia_Nhap" class="form-control form-control-sm text-right" placeholder="Đơn giá" /></td>
+                                <td class="text-right align-middle font-weight-bold">@((newDetail.SL_Nhap * newDetail.Don_Gia_Nhap).ToString("N0"))</td>
+                                <td class="text-center"><button type="button" class="btn btn-sm btn-success" @onclick="AddDetail">Thêm</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                    // === PHẦN MỚI: HIỂN THỊ DANH SÁCH KHI SỬA ===
+                <h5>Chi tiết Sản Phẩm (Xem)</h5>
+                <div class="alert alert-info p-2 mb-2">
+                    <small>Để thêm/xóa/sửa sản phẩm, vui lòng nhấn nút <b>"Chuyển sang sửa Chi tiết"</b> bên dưới.</small>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-striped bg-white">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Tên Hàng</th>
+                                <th class="text-right">SL</th>
+                                <th class="text-right">Đơn giá</th>
+                                <th class="text-right">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detail in currentPhieu.Details)
+                            {
+                                <tr>
+                                    <td>@detail.Ten_San_Pham</td>
+                                    <td class="text-right">@detail.SL_Nhap.ToString("N0")</td>
+                                    <td class="text-right">@detail.Don_Gia_Nhap.ToString("N0")</td>
+                                    <td class="text-right">@((detail.SL_Nhap * detail.Don_Gia_Nhap).ToString("N0"))</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td colspan="3" class="text-right font-weight-bold">Tổng cộng:</td>
+                                <td class="text-right font-weight-bold">
+                                    @currentPhieu.Details.Sum(d => d.SL_Nhap * d.Don_Gia_Nhap).ToString("N0")
                                 </td>
                             </tr>
-                        }
-                        <tr>
-                            <td style="width: 40%">
-                                <InputSelect @bind-Value="newDetail.San_Pham_ID" class="form-control" @onchange="@(e => UpdateNewDetailName(e))">
-                                    <option value="0">-- Chọn Sản Phẩm --</option>
-                                    @if (danhSachSP != null)
-                                    { @foreach (var sp in danhSachSP)
-                                        {
-                                            <option value="@sp.Id">@sp.Ten_San_Pham</option>
-                                        } }
-                                </InputSelect>
-                                @if (showDetailError)
-                                {
-                                    <span style="color: red; font-size: 0.8em;">@detailErrorMessage</span>
-                                }
-                            </td>
-                            <td style="width: 15%"><InputNumber @bind-Value="newDetail.SL_Nhap" class="form-control" /></td>
-                            <td style="width: 20%"><InputNumber @bind-Value="newDetail.Don_Gia_Nhap" class="form-control" format="N0" /></td>
-                            <td style="width: 15%">@((newDetail.SL_Nhap * newDetail.Don_Gia_Nhap).ToString("N0"))</td>
-                            <td style="width: 10%"><button type="button" class="btn btn-sm btn-success" @onclick="AddDetail">Thêm</button></td>
-                        </tr>
+                        </tbody>
                     </table>
                 </div>
             }
@@ -132,15 +186,19 @@ else if (currentPhieu.Header.Id != 0 && isEditingDetails)
         <hr />
 
         <h5>Lưới Hiệu Chỉnh (@currentPhieu.Details.Count Chi tiết)</h5>
+        @if (!string.IsNullOrEmpty(pageErrorMessage))
+        {
+            <div class="alert alert-danger" style="color: red;">@pageErrorMessage</div>
+        }
         <div class="table-responsive">
             <table class="table table-sm table-bordered">
-                <thead>
+                <thead class="thead-light">
                     <tr>
                         <th style="width: 25%">Mã/Tên Sản Phẩm</th>
-                        <th style="width: 15%">Số lượng</th>
-                        <th style="width: 15%">Đơn giá</th>
-                        <th style="width: 15%">Trị giá</th>
-                        <th style="width: 30%">Hành động</th>
+                        <th style="width: 15%" class="text-right">Số lượng</th>
+                        <th style="width: 15%" class="text-right">Đơn giá</th>
+                        <th style="width: 15%" class="text-right">Trị giá</th>
+                        <th style="width: 30%" class="text-center">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -148,28 +206,28 @@ else if (currentPhieu.Header.Id != 0 && isEditingDetails)
                     {
                         <tr>
                             <td><span>@detail.Ten_San_Pham</span></td>
-                            <td>
+                            <td class="text-right">
                                 @if (detail.Id == detailDangSua?.Id)
                                 {
-                                    <InputNumber @bind-Value="detailDangSua.SL_Nhap" class="form-control form-control-sm" />
+                                    <InputNumber @bind-Value="detailDangSua.SL_Nhap" class="form-control form-control-sm text-right" />
                                 }
                                 else
                                 {
                                     <span>@detail.SL_Nhap.ToString("N0")</span>
                                 }
                             </td>
-                            <td>
+                            <td class="text-right">
                                 @if (detail.Id == detailDangSua?.Id)
                                 {
-                                    <InputNumber @bind-Value="detailDangSua.Don_Gia_Nhap" class="form-control form-control-sm" format="N0" />
+                                    <InputNumber @bind-Value="detailDangSua.Don_Gia_Nhap" class="form-control form-control-sm text-right" format="N0" />
                                 }
                                 else
                                 {
                                     <span>@detail.Don_Gia_Nhap.ToString("N0")</span>
                                 }
                             </td>
-                            <td>@((detail.SL_Nhap * detail.Don_Gia_Nhap).ToString("N0"))</td>
-                            <td>
+                            <td class="text-right">@((detail.SL_Nhap * detail.Don_Gia_Nhap).ToString("N0"))</td>
+                            <td class="text-center">
                                 @if (detail.Id == detailDangSua?.Id)
                                 {
                                     <button class="btn btn-sm btn-success" @onclick="LuuSuaChiTiet">Lưu</button>
@@ -188,20 +246,22 @@ else if (currentPhieu.Header.Id != 0 && isEditingDetails)
                             <InputSelect @bind-Value="newDetail.San_Pham_ID" class="form-control form-control-sm" @onchange="@(e => UpdateNewDetailName(e))">
                                 <option value="0">-- Thêm Sản Phẩm --</option>
                                 @if (danhSachSP != null)
-                                { @foreach (var sp in danhSachSP)
+                                {
+                                    @foreach (var sp in danhSachSP)
                                     {
                                         <option value="@sp.Id">@sp.Ten_San_Pham</option>
-                                    } }
+                                    }
+                                }
                             </InputSelect>
                             @if (showDetailError)
                             {
                                 <span style="color: red; font-size: 0.8em;">@detailErrorMessage</span>
                             }
                         </td>
-                        <td><InputNumber @bind-Value="newDetail.SL_Nhap" class="form-control form-control-sm" /></td>
-                        <td><InputNumber @bind-Value="newDetail.Don_Gia_Nhap" class="form-control form-control-sm" format="N0" /></td>
-                        <td>@((newDetail.SL_Nhap * newDetail.Don_Gia_Nhap).ToString("N0"))</td>
-                        <td><button type="button" class="btn btn-sm btn-success" @onclick="AddDetailTrongCheDoSua">Thêm Chi Tiết</button></td>
+                        <td><InputNumber @bind-Value="newDetail.SL_Nhap" class="form-control form-control-sm text-right" placeholder="SL" /></td>
+                        <td><InputNumber @bind-Value="newDetail.Don_Gia_Nhap" class="form-control form-control-sm text-right" placeholder="Đơn giá" format="N0" /></td>
+                        <td class="text-right font-weight-bold">@((newDetail.SL_Nhap * newDetail.Don_Gia_Nhap).ToString("N0"))</td>
+                        <td class="text-center"><button type="button" class="btn btn-sm btn-success" @onclick="AddDetailTrongCheDoSua">Thêm Chi Tiết</button></td>
                     </tr>
                 </tbody>
             </table>
@@ -210,7 +270,6 @@ else if (currentPhieu.Header.Id != 0 && isEditingDetails)
         <button type="button" class="btn btn-secondary mt-3" @onclick="QuayLaiQuanLyChung">Quay lại quản lý Phiếu</button>
     </div>
 }
-
 
 <hr />
 
@@ -229,7 +288,7 @@ else
                 <th>Ngày Nhập</th>
                 <th>Kho</th>
                 <th>Nhà Cung Cấp</th>
-                <th>Tổng Tiền</th>
+                <th class="text-right">Tổng Tiền</th>
                 <th>Chức năng</th>
             </tr>
         </thead>
@@ -255,31 +314,21 @@ else
     </table>
 }
 
-
 @code {
-    // Biến trạng thái
     private bool isEditingDetails = false;
-    private NhapKhoRawData detailDangSua; // Dùng để giữ item đang sửa chi tiết
-
-    // Dữ liệu cho Dropdown Lists (Khóa ngoại)
+    private NhapKhoRawData detailDangSua;
     private IEnumerable<Kho> danhSachKho;
     private IEnumerable<NhaCungCap> danhSachNCC;
     private IEnumerable<SanPham> danhSachSP;
-
-    // Quản lý Phiếu Nhập
     private NhapKhoFull currentPhieu = new NhapKhoFull();
     private IEnumerable<NhapKho> danhSachPhieu;
     private string pageErrorMessage;
-
-    // Quản lý dòng Chi tiết mới
     private NhapKhoRawData newDetail = new NhapKhoRawData { SL_Nhap = 1, Don_Gia_Nhap = 0 };
     private bool showDetailError = false;
     private string detailErrorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        // Tải dữ liệu danh mục ban đầu
-        // (Giả định các Service này đã được sửa để trả về "Id"
         danhSachKho = await KhoService.GetDanhSach();
         danhSachNCC = await NCCService.GetDanhSach();
         danhSachSP = await SPService.GetDanhSach();
@@ -292,17 +341,13 @@ else
         danhSachPhieu = await NKService.GetDanhSach();
         pageErrorMessage = null;
     }
+
     private void RemoveDetail(NhapKhoRawData detail)
     {
         currentPhieu.Details.Remove(detail);
         pageErrorMessage = null;
     }
 
-    /* ----------------------------------------------------- */
-    /* CHẾ ĐỘ SỬA CHI TIẾT */
-    /* ----------------------------------------------------- */
-
-    // === SỬA === (Tham số là id)
     private async Task ChonPhieuDeSua(int id, bool editDetailMode)
     {
         pageErrorMessage = null;
@@ -310,7 +355,6 @@ else
         {
             var header = await NKService.GetPhieuNhapById(id);
             var details = await NKService.GetChiTiet(id);
-
             if (header != null)
             {
                 currentPhieu = new NhapKhoFull { Header = header, Details = details };
@@ -360,22 +404,13 @@ else
                 pageErrorMessage = "SL và Đơn giá phải lớn hơn 0.";
                 return;
             }
-
             await NKService.UpdateChiTiet(detailDangSua);
-
             var index = currentPhieu.Details.FindIndex(d => d.Id == detailDangSua.Id);
-            if (index != -1)
-            {
-                currentPhieu.Details[index] = detailDangSua;
-            }
-
+            if (index != -1) { currentPhieu.Details[index] = detailDangSua; }
             detailDangSua = null;
             await LoadDanhSachPhieu();
         }
-        catch (Exception ex)
-        {
-            pageErrorMessage = $"Lỗi lưu chi tiết: {ex.Message}";
-        }
+        catch (Exception ex) { pageErrorMessage = $"Lỗi lưu chi tiết: {ex.Message}"; }
     }
 
     private void HuySuaChiTiet()
@@ -387,7 +422,6 @@ else
     private async Task XoaChiTiet(NhapKhoRawData detail)
     {
         bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", new object[] { $"Bạn có chắc muốn xóa sản phẩm '{detail.Ten_San_Pham}' khỏi phiếu này không?" });
-
         if (confirmed)
         {
             try
@@ -396,36 +430,53 @@ else
                 currentPhieu.Details.Remove(detail);
                 await LoadDanhSachPhieu();
             }
-            catch (Exception ex)
-            {
-                pageErrorMessage = $"Lỗi xóa chi tiết: {ex.Message}";
-            }
+            catch (Exception ex) { pageErrorMessage = $"Lỗi xóa chi tiết: {ex.Message}"; }
         }
     }
 
-    // === SỬA === (Tham số là id)
     private async Task InPhieu(int id)
     {
         await JSRuntime.InvokeAsync<object>("open", $"/inphieunhap/{id}", "_blank");
     }
 
-
-    private void AddDetailTrongCheDoSua()
+    // === SỬA LỖI QUAN TRỌNG ===
+    private async Task AddDetailTrongCheDoSua()
     {
-        AddDetail();
-        pageErrorMessage = null;
-    }
+        showDetailError = false;
+        detailErrorMessage = null;
 
-    /* ----------------------------------------------------- */
-    /* HÀM CHUNG & THÊM MỚI */
-    /* ----------------------------------------------------- */
+        if (newDetail.San_Pham_ID == 0) { detailErrorMessage = "Vui lòng chọn Sản phẩm."; showDetailError = true; return; }
+        if (newDetail.SL_Nhap <= 0) { detailErrorMessage = "SL Nhập phải lớn hơn 0."; showDetailError = true; return; }
+        if (newDetail.Don_Gia_Nhap <= 0) { detailErrorMessage = "Đơn giá phải lớn hơn 0."; showDetailError = true; return; }
+        if (currentPhieu.Details.Any(d => d.San_Pham_ID == newDetail.San_Pham_ID)) { detailErrorMessage = "Sản phẩm này đã có trong chi tiết phiếu."; showDetailError = true; return; }
+
+        try
+        {
+            // 1. Gán ID phiếu
+            newDetail.Nhap_Kho_ID = currentPhieu.Header.Id;
+
+            // 2. GỌI SERVICE ĐỂ LƯU DB
+            await NKService.AddChiTiet(newDetail);
+
+            // 3. Tải lại danh sách chi tiết để hiển thị
+            var updatedDetails = await NKService.GetChiTiet(currentPhieu.Header.Id);
+            currentPhieu.Details = updatedDetails.ToList();
+
+            // 4. Reset form nhập
+            newDetail = new NhapKhoRawData { SL_Nhap = 1, Don_Gia_Nhap = 0 };
+            await LoadDanhSachPhieu(); // Cập nhật tổng tiền ở danh sách ngoài
+        }
+        catch (Exception ex)
+        {
+            pageErrorMessage = $"Lỗi thêm chi tiết: {ex.Message}";
+        }
+    }
 
     private async Task HandleValidSubmit()
     {
         pageErrorMessage = null;
         try
         {
-            // === SỬA === (Kiểm tra Header.Id)
             if (currentPhieu.Header.Id == 0) // THÊM MỚI
             {
                 if (currentPhieu.Details == null || !currentPhieu.Details.Any())
@@ -441,21 +492,16 @@ else
                 await NKService.UpdatePhieuNhap(currentPhieu.Header);
                 await JSRuntime.InvokeVoidAsync("alert", $"Hiệu chỉnh Phiếu {currentPhieu.Header.So_Phieu_Nhap_Kho} thành công!");
             }
-
             await LoadDanhSachPhieu();
             ResetForm();
         }
-        catch (Exception ex)
-        {
-            pageErrorMessage = $"Lỗi: {ex.Message}";
-        }
+        catch (Exception ex) { pageErrorMessage = $"Lỗi: {ex.Message}"; }
     }
 
     private void AddDetail()
     {
         showDetailError = false;
         detailErrorMessage = null;
-
         if (detailDangSua != null) { return; }
 
         if (newDetail.San_Pham_ID == 0) { detailErrorMessage = "Vui lòng chọn Sản phẩm."; showDetailError = true; return; }
@@ -463,11 +509,8 @@ else
         if (newDetail.Don_Gia_Nhap <= 0) { detailErrorMessage = "Đơn giá phải lớn hơn 0."; showDetailError = true; return; }
         if (currentPhieu.Details.Any(d => d.San_Pham_ID == newDetail.San_Pham_ID)) { detailErrorMessage = "Sản phẩm này đã có trong chi tiết phiếu."; showDetailError = true; return; }
 
-        // === SỬA === (Tìm tên bằng sp.Id)
         newDetail.Ten_San_Pham = danhSachSP.FirstOrDefault(sp => sp.Id == newDetail.San_Pham_ID)?.Ten_San_Pham;
-        // === SỬA === (Gán Header.Id)
         newDetail.Nhap_Kho_ID = currentPhieu.Header.Id;
-
         currentPhieu.Details.Add(new NhapKhoRawData
             {
                 San_Pham_ID = newDetail.San_Pham_ID,
@@ -476,9 +519,7 @@ else
                 Don_Gia_Nhap = newDetail.Don_Gia_Nhap,
                 Nhap_Kho_ID = newDetail.Nhap_Kho_ID
             });
-
         newDetail = new NhapKhoRawData { SL_Nhap = 1, Don_Gia_Nhap = 0 };
-        pageErrorMessage = null;
     }
 
     private void ResetForm()
@@ -495,20 +536,15 @@ else
     private async Task DeletePhieuNhap(NhapKho phieu)
     {
         bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", new object[] { $"Bạn có chắc muốn xóa phiếu '{phieu.So_Phieu_Nhap_Kho}' không? Thao tác này không thể hoàn tác." });
-
         if (confirmed)
         {
             try
             {
-                // === SỬA === (Truyền phieu.Id)
                 await NKService.DeletePhieuNhap(phieu.Id);
                 await LoadDanhSachPhieu();
                 ResetForm();
             }
-            catch (Exception ex)
-            {
-                pageErrorMessage = $"Lỗi khi xóa: {ex.Message}";
-            }
+            catch (Exception ex) { pageErrorMessage = $"Lỗi khi xóa: {ex.Message}"; }
         }
     }
 
@@ -517,7 +553,6 @@ else
         if (int.TryParse(e.Value?.ToString(), out int selectedId))
         {
             newDetail.San_Pham_ID = selectedId;
-            // === SỬA === (Tìm bằng sp.Id)
             newDetail.Ten_San_Pham = danhSachSP.FirstOrDefault(sp => sp.Id == selectedId)?.Ten_San_Pham;
         }
     }

@@ -11,5 +11,6 @@
         public decimal SL_Nhap { get; set; }
         public decimal SL_Xuat { get; set; }
         public decimal SL_Cuoi_Ky { get; set; }
+       
     }
 }

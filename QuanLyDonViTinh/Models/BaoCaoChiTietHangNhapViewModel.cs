@@ -20,5 +20,6 @@ namespace QuanLyDonViTinh.Models // Quan trọng: Phải đúng namespace này
 
         // Thuộc tính tính toán tự động (không cần lưu DB)
         public decimal Tri_Gia => SL_Nhap * Don_Gia_Nhap;
+        
     }
 }

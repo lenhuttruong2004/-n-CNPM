@@ -18,5 +18,6 @@ namespace QuanLyDonViTinh.Models
 
         public decimal Don_Gia_Xuat { get; set; }
         public decimal Tri_Gia => SL_Xuat * Don_Gia_Xuat;
+        
     }
 }

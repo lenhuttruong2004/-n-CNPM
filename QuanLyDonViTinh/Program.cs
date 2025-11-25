@@ -1,6 +1,8 @@
 ﻿/* Đây là code ĐÚNG cho dự án .NET 7.0 của bạn 
 */
 
+using Microsoft.AspNetCore.Localization;
+using System.Globalization;
 using QuanLyDonViTinh.Services; // Thêm dòng này để "thấy" Service
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,7 +24,16 @@ builder.Services.AddScoped<XuatKhoService>();
 builder.Services.AddScoped<ReportService>();
 
 
+builder.Services.AddLocalization();
 var app = builder.Build();
+var supportedCultures = new[] { new CultureInfo("vi-VN") };
+var locOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("vi-VN"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+};
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -39,5 +50,5 @@ app.UseRouting();
 /* .NET 7 dùng 2 dòng này để chạy Blazor */
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
-
+app.UseRequestLocalization(locOptions);
 app.Run();
