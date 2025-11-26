@@ -208,10 +208,38 @@ namespace QuanLyDonViTinh.Services
         /* 6. XÓA PHIẾU */
         public async Task DeletePhieuXuat(int id)
         {
-            string sql = "DELETE FROM tbl_DM_Xuat_Kho WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString))
             {
-                await connection.ExecuteAsync(sql, new { Id = id });
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Bước 1: Xóa các dòng chi tiết (Raw Data) thuộc phiếu xuất này trước
+                        string deleteDetailSql = "DELETE FROM tbl_DM_Xuat_Kho_Raw_Data WHERE Xuat_Kho_ID = @Id";
+                        await connection.ExecuteAsync(deleteDetailSql, new { Id = id }, transaction: transaction);
+
+                        // Bước 2: Xóa phiếu xuất (Header)
+                        string deleteHeaderSql = "DELETE FROM tbl_DM_Xuat_Kho WHERE Id = @Id";
+                        await connection.ExecuteAsync(deleteHeaderSql, new { Id = id }, transaction: transaction);
+
+                        transaction.Commit();
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        if (ex.Number == 547)
+                        {
+                            throw new Exception("Không thể xóa phiếu xuất này vì dữ liệu đang được tham chiếu ở nơi khác.");
+                        }
+                        throw;
+                    }
+                    catch (Exception)
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
             }
         }
 

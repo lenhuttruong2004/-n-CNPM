@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
-using Microsoft.Extensions.Configuration; // Thêm using
+using Microsoft.Extensions.Configuration;
 
 namespace QuanLyDonViTinh.Services
 {
@@ -17,17 +17,12 @@ namespace QuanLyDonViTinh.Services
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        /* HÀM LẤY DANH SÁCH (READ) - SỬA LẠI JOIN */
         public async Task<IEnumerable<KhoUser>> GetDanhSach()
         {
+            // Code cũ của bạn logic đã đúng
             string sql = @"
-                SELECT 
-                    -- === SỬA ===: Thêm ""ku.Id""  <-- SỬA Ở ĐÂY
-                    ku.Id, ku.Ma_Dang_Nhap, ku.Kho_ID,
-                    k.Ten_Kho-- Lấy tên kho từ bảng tbl_DM_Kho
+                SELECT ku.Id, ku.Ma_Dang_Nhap, ku.Kho_ID, k.Ten_Kho
                 FROM tbl_DM_Kho_User ku
-                -- === SỬA ===: JOIN vào ""k.Id"", không phải ""k.Ma_Kho""  <-- SỬA Ở ĐÂY
-                --(Vì tbl_DM_Kho có khóa chính là ""Id""  <-- SỬA Ở ĐÂY
                 LEFT JOIN tbl_DM_Kho k ON ku.Kho_ID = k.Id";
 
             using (var connection = new SqlConnection(_connectionString))
@@ -36,13 +31,9 @@ namespace QuanLyDonViTinh.Services
             }
         }
 
-        /* HÀM THÊM MỚI (CREATE) */
         public async Task AddKhoUser(KhoUser khoUser)
         {
-            // Câu SQL này đã đúng
-            string sql = @"
-                INSERT INTO tbl_DM_Kho_User (Ma_Dang_Nhap, Kho_ID) 
-                VALUES (@Ma_Dang_Nhap, @Kho_ID)";
+            string sql = @"INSERT INTO tbl_DM_Kho_User (Ma_Dang_Nhap, Kho_ID) VALUES (@Ma_Dang_Nhap, @Kho_ID)";
             try
             {
                 using (var connection = new SqlConnection(_connectionString))
@@ -52,23 +43,29 @@ namespace QuanLyDonViTinh.Services
             }
             catch (SqlException ex)
             {
-                // (Logic try-catch này BÂY GIỜ đã đúng, vì ta đã thêm UNIQUE constraint ở file SQL)
                 if (ex.Number == 2627 || ex.Number == 2601)
-                {
-                    throw new Exception("Phân quyền này đã tồn tại cho User và Kho được chọn.");
-                }
-                else { throw; }
+                    throw new Exception("Phân quyền này đã tồn tại.");
+                else throw;
             }
         }
 
-        /* HÀM XÓA (DELETE) - SỬA LẠI HOÀN TOÀN */
-        // Phải xóa bằng Khóa Chính "Id", không phải khóa tổng hợp (tưởng tượng)
+        /* === SỬA HÀM NÀY: Thêm Try-Catch an toàn === */
         public async Task DeleteKhoUser(int id)
         {
             string sql = "DELETE FROM tbl_DM_Kho_User WHERE Id = @Id";
             using (var connection = new SqlConnection(_connectionString))
             {
-                await connection.ExecuteAsync(sql, new { Id = id });
+                try
+                {
+                    await connection.ExecuteAsync(sql, new { Id = id });
+                }
+                catch (SqlException ex)
+                {
+                    // Phòng trường hợp user đang đăng nhập hoặc có liên kết hệ thống khác
+                    if (ex.Number == 547)
+                        throw new Exception("Không thể xóa phân quyền này vì đang được sử dụng/tham chiếu.");
+                    else throw;
+                }
             }
         }
     }

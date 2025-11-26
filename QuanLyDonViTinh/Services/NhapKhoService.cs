@@ -211,13 +211,40 @@ namespace QuanLyDonViTinh.Services
         /* 6. XÓA PHIẾU (DELETE) */
         public async Task DeletePhieuNhap(int id)
         {
-            string sql = "DELETE FROM tbl_DM_Nhap_Kho WHERE Id = @Id";
+            // Sử dụng Transaction để đảm bảo xóa sạch Chi tiết rồi mới xóa Phiếu
             using (var connection = new SqlConnection(_connectionString))
             {
-                // Thêm try-catch nếu cần kiểm tra ràng buộc khi xóa (VD: đã xuất kho thì không được xóa nhập)
-                // Hiện tại bảng Nhap_Kho là bảng cha của Nhap_Kho_Raw_Data, cần cấu hình ON DELETE CASCADE ở DB 
-                // hoặc xóa chi tiết trước. Ở đây giả định DB đã xử lý hoặc logic xóa được phép.
-                await connection.ExecuteAsync(sql, new { Id = id });
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Bước 1: Xóa các dòng chi tiết (Raw Data) thuộc phiếu này trước
+                        string deleteDetailSql = "DELETE FROM tbl_DM_Nhap_Kho_Raw_Data WHERE Nhap_Kho_ID = @Id";
+                        await connection.ExecuteAsync(deleteDetailSql, new { Id = id }, transaction: transaction);
+
+                        // Bước 2: Xóa phiếu nhập (Header)
+                        string deleteHeaderSql = "DELETE FROM tbl_DM_Nhap_Kho WHERE Id = @Id";
+                        await connection.ExecuteAsync(deleteHeaderSql, new { Id = id }, transaction: transaction);
+
+                        transaction.Commit();
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        // Nếu vẫn bị lỗi FK (do phiếu nhập này đã được dùng để tính tồn kho/xuất kho ở bảng khác)
+                        if (ex.Number == 547)
+                        {
+                            throw new Exception("Không thể xóa phiếu nhập này vì dữ liệu đã phát sinh liên quan (Báo cáo/Tồn kho).");
+                        }
+                        throw;
+                    }
+                    catch (Exception)
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
             }
         }
 
